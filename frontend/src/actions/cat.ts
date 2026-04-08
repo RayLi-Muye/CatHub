@@ -1,12 +1,19 @@
 "use server";
 
+import { randomUUID } from "node:crypto";
 import { eq, and } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { cats, users } from "@/lib/db/schema";
+import { catImages, cats, users } from "@/lib/db/schema";
 import { auth } from "@/lib/auth";
 import { catSchema } from "@/lib/validators/cat";
+import {
+  deleteStoredAvatar,
+  getAvatarFile,
+  saveCatAvatar,
+  validateAvatarFile,
+} from "@/lib/storage/cat-images";
 
 export type CatActionState = {
   error?: string;
@@ -27,6 +34,7 @@ export async function createCat(
 ): Promise<CatActionState> {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
+  const userId = session.user.id;
 
   const raw = {
     name: formData.get("name") as string,
@@ -51,14 +59,21 @@ export async function createCat(
     return { fieldErrors };
   }
 
+  const avatarFile = getAvatarFile(formData);
+  const avatarError = validateAvatarFile(avatarFile);
+  if (avatarError) {
+    return { fieldErrors: { avatar: [avatarError] } };
+  }
+
   const data = result.data;
+  const catId = randomUUID();
   let slug = slugify(data.name);
 
   // Ensure slug is unique for this user
   const [existing] = await db
     .select({ id: cats.id })
     .from(cats)
-    .where(and(eq(cats.ownerId, session.user.id), eq(cats.slug, slug)))
+    .where(and(eq(cats.ownerId, userId), eq(cats.slug, slug)))
     .limit(1);
 
   if (existing) {
@@ -69,24 +84,66 @@ export async function createCat(
   const [user] = await db
     .select({ username: users.username })
     .from(users)
-    .where(eq(users.id, session.user.id))
+    .where(eq(users.id, userId))
     .limit(1);
 
-  await db.insert(cats).values({
-    ownerId: session.user.id,
-    slug,
-    name: data.name,
-    breed: data.breed ?? null,
-    sex: data.sex as "male" | "female" | "unknown",
-    birthdate: data.birthdate ? new Date(data.birthdate) : null,
-    description: data.description ?? null,
-    colorMarkings: data.colorMarkings ?? null,
-    microchipId: data.microchipId ?? null,
-    isNeutered: data.isNeutered,
-    isPublic: data.isPublic,
-  });
+  if (!user) {
+    return { error: "User not found" };
+  }
+
+  let uploadedAvatar:
+    | Awaited<ReturnType<typeof saveCatAvatar>>
+    | null = null;
+
+  if (avatarFile) {
+    try {
+      uploadedAvatar = await saveCatAvatar({ catId, file: avatarFile, slug });
+    } catch {
+      return { error: "Failed to upload avatar. Please try again." };
+    }
+  }
+
+  try {
+    await db.transaction(async (tx) => {
+      const catValues: typeof cats.$inferInsert = {
+        id: catId,
+        ownerId: userId,
+        slug,
+        name: data.name,
+        breed: data.breed ?? null,
+        sex: data.sex as "male" | "female" | "unknown",
+        birthdate: data.birthdate ? new Date(data.birthdate) : null,
+        description: data.description ?? null,
+        avatarUrl: uploadedAvatar?.publicUrl ?? null,
+        colorMarkings: data.colorMarkings ?? null,
+        microchipId: data.microchipId ?? null,
+        isNeutered: data.isNeutered,
+        isPublic: data.isPublic,
+      };
+
+      await tx.insert(cats).values(catValues);
+
+      if (uploadedAvatar) {
+        await tx.insert(catImages).values({
+          catId,
+          url: uploadedAvatar.publicUrl,
+          filename: uploadedAvatar.filename,
+          mimeType: uploadedAvatar.mimeType,
+          sizeBytes: uploadedAvatar.sizeBytes,
+          isPrimary: true,
+          sortOrder: 0,
+        });
+      }
+    });
+  } catch (error) {
+    if (uploadedAvatar) {
+      await deleteStoredAvatar(uploadedAvatar.publicUrl);
+    }
+    throw error;
+  }
 
   revalidatePath("/dashboard");
+  revalidatePath(`/${user.username}`);
   redirect(`/${user.username}/${slug}`);
 }
 
@@ -97,16 +154,28 @@ export async function updateCat(
 ): Promise<CatActionState> {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
+  const userId = session.user.id;
 
   // Verify ownership
   const [cat] = await db
-    .select({ id: cats.id, ownerId: cats.ownerId, slug: cats.slug })
+    .select({
+      id: cats.id,
+      ownerId: cats.ownerId,
+      slug: cats.slug,
+      avatarUrl: cats.avatarUrl,
+    })
     .from(cats)
     .where(eq(cats.id, catId))
     .limit(1);
 
-  if (!cat || cat.ownerId !== session.user.id) {
+  if (!cat || cat.ownerId !== userId) {
     return { error: "Cat not found or access denied" };
+  }
+
+  const avatarFile = getAvatarFile(formData);
+  const avatarError = validateAvatarFile(avatarFile);
+  if (avatarError) {
+    return { fieldErrors: { avatar: [avatarError] } };
   }
 
   const raw = {
@@ -133,30 +202,82 @@ export async function updateCat(
   }
 
   const data = result.data;
+  const [currentPrimaryImage] = await db
+    .select({ id: catImages.id, url: catImages.url })
+    .from(catImages)
+    .where(and(eq(catImages.catId, cat.id), eq(catImages.isPrimary, true)))
+    .limit(1);
 
   const [user] = await db
     .select({ username: users.username })
     .from(users)
-    .where(eq(users.id, session.user.id))
+    .where(eq(users.id, userId))
     .limit(1);
 
-  await db
-    .update(cats)
-    .set({
-      name: data.name,
-      breed: data.breed ?? null,
-      sex: data.sex as "male" | "female" | "unknown",
-      birthdate: data.birthdate ? new Date(data.birthdate) : null,
-      description: data.description ?? null,
-      colorMarkings: data.colorMarkings ?? null,
-      microchipId: data.microchipId ?? null,
-      isNeutered: data.isNeutered,
-      isPublic: data.isPublic,
-      updatedAt: new Date(),
-    })
-    .where(eq(cats.id, catId));
+  if (!user) {
+    return { error: "User not found" };
+  }
+
+  let uploadedAvatar:
+    | Awaited<ReturnType<typeof saveCatAvatar>>
+    | null = null;
+
+  if (avatarFile) {
+    try {
+      uploadedAvatar = await saveCatAvatar({ catId, file: avatarFile, slug: cat.slug });
+    } catch {
+      return { error: "Failed to upload avatar. Please try again." };
+    }
+  }
+
+  try {
+    await db.transaction(async (tx) => {
+      await tx
+        .update(cats)
+        .set({
+          name: data.name,
+          breed: data.breed ?? null,
+          sex: data.sex as "male" | "female" | "unknown",
+          birthdate: data.birthdate ? new Date(data.birthdate) : null,
+          description: data.description ?? null,
+          avatarUrl: uploadedAvatar?.publicUrl ?? cat.avatarUrl ?? null,
+          colorMarkings: data.colorMarkings ?? null,
+          microchipId: data.microchipId ?? null,
+          isNeutered: data.isNeutered,
+          isPublic: data.isPublic,
+          updatedAt: new Date(),
+        })
+        .where(eq(cats.id, catId));
+
+      if (uploadedAvatar) {
+        if (currentPrimaryImage) {
+          await tx.delete(catImages).where(eq(catImages.id, currentPrimaryImage.id));
+        }
+
+        await tx.insert(catImages).values({
+          catId,
+          url: uploadedAvatar.publicUrl,
+          filename: uploadedAvatar.filename,
+          mimeType: uploadedAvatar.mimeType,
+          sizeBytes: uploadedAvatar.sizeBytes,
+          isPrimary: true,
+          sortOrder: 0,
+        });
+      }
+    });
+  } catch (error) {
+    if (uploadedAvatar) {
+      await deleteStoredAvatar(uploadedAvatar.publicUrl);
+    }
+    throw error;
+  }
+
+  if (uploadedAvatar) {
+    await deleteStoredAvatar(currentPrimaryImage?.url ?? cat.avatarUrl);
+  }
 
   revalidatePath(`/${user.username}/${cat.slug}`);
+  revalidatePath(`/${user.username}`);
   revalidatePath("/dashboard");
   redirect(`/${user.username}/${cat.slug}`);
 }
@@ -164,19 +285,42 @@ export async function updateCat(
 export async function deleteCat(catId: string): Promise<{ error?: string }> {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
+  const userId = session.user.id;
 
   const [cat] = await db
-    .select({ id: cats.id, ownerId: cats.ownerId })
+    .select({ id: cats.id, ownerId: cats.ownerId, avatarUrl: cats.avatarUrl })
     .from(cats)
     .where(eq(cats.id, catId))
     .limit(1);
 
-  if (!cat || cat.ownerId !== session.user.id) {
+  if (!cat || cat.ownerId !== userId) {
     return { error: "Cat not found or access denied" };
   }
 
+  const imageRows = await db
+    .select({ url: catImages.url })
+    .from(catImages)
+    .where(eq(catImages.catId, catId));
+
+  const [user] = await db
+    .select({ username: users.username })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+
   await db.delete(cats).where(eq(cats.id, catId));
 
+  const imageUrls = new Set(
+    [cat.avatarUrl, ...imageRows.map((image) => image.url)].filter(Boolean)
+  );
+
+  await Promise.all(
+    [...imageUrls].map((imageUrl) => deleteStoredAvatar(imageUrl))
+  );
+
   revalidatePath("/dashboard");
+  if (user) {
+    revalidatePath(`/${user.username}`);
+  }
   redirect("/dashboard");
 }

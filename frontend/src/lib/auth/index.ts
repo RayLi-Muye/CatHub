@@ -46,9 +46,29 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return token;
     },
     async session({ session, token }) {
-      if (token.id) {
-        session.user.id = token.id as string;
+      if (!token.id) {
+        return session;
       }
+
+      const [user] = await db
+        .select({
+          id: users.id,
+          email: users.email,
+          username: users.username,
+          displayName: users.displayName,
+          avatarUrl: users.avatarUrl,
+        })
+        .from(users)
+        .where(eq(users.id, token.id as string))
+        .limit(1);
+
+      if (!user) return session;
+
+      session.user.id = user.id;
+      session.user.email = user.email;
+      session.user.name = user.displayName ?? user.username;
+      session.user.image = user.avatarUrl;
+
       return session;
     },
   },

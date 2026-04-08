@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useActionState } from "react";
 import type { CatActionState } from "@/actions/cat";
 
@@ -9,6 +10,7 @@ type CatData = {
   sex?: string | null;
   birthdate?: Date | null;
   description?: string | null;
+  avatarUrl?: string | null;
   colorMarkings?: string | null;
   microchipId?: string | null;
   isNeutered?: boolean | null;
@@ -27,12 +29,56 @@ export function CatForm({
   const [state, formAction, pending] = useActionState(action, {});
 
   return (
-    <form action={formAction} className="space-y-6 max-w-2xl">
+    <form
+      action={formAction}
+      encType="multipart/form-data"
+      className="space-y-6 max-w-2xl"
+    >
       {state.error && (
         <div className="p-4 bg-destructive/10 text-destructive text-sm">
           {state.error}
         </div>
       )}
+
+      <div>
+        <label
+          htmlFor="avatar"
+          className="block text-sm uppercase tracking-wider mb-2"
+        >
+          Avatar
+        </label>
+        <input
+          id="avatar"
+          name="avatar"
+          type="file"
+          accept="image/png,image/jpeg,image/webp,image/gif"
+          className="w-full px-4 py-3 bg-card border border-border text-foreground file:mr-4 file:border-0 file:bg-primary file:px-3 file:py-2 file:text-sm file:text-primary-foreground"
+        />
+        <p className="mt-2 text-sm text-muted-foreground">
+          PNG, JPG, WEBP, or GIF. Up to 5 MB.
+        </p>
+        {state.fieldErrors?.avatar && (
+          <p className="mt-1 text-sm text-destructive">
+            {state.fieldErrors.avatar[0]}
+          </p>
+        )}
+        {initialData?.avatarUrl && (
+          <div className="mt-4 flex items-center gap-4 bg-card p-4">
+            <div className="relative w-20 h-20 overflow-hidden bg-sunshine-300/30 shrink-0">
+              <Image
+                src={initialData.avatarUrl}
+                alt={initialData.name ?? "Cat avatar"}
+                fill
+                sizes="80px"
+                className="object-cover"
+              />
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Upload a new image to replace the current avatar.
+            </p>
+          </div>
+        )}
+      </div>
 
       {/* Name */}
       <div>

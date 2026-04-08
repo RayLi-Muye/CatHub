@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 type CatCardProps = {
@@ -45,12 +46,14 @@ export function CatCard({
       className="block bg-card p-6 shadow-golden hover:translate-y-[-2px] transition-transform"
     >
       {/* Avatar placeholder */}
-      <div className="w-full aspect-square bg-sunshine-300/30 mb-4 flex items-center justify-center text-5xl overflow-hidden">
+      <div className="relative w-full aspect-square bg-sunshine-300/30 mb-4 flex items-center justify-center text-5xl overflow-hidden">
         {avatarUrl ? (
-          <img
+          <Image
             src={avatarUrl}
             alt={name}
-            className="w-full h-full object-cover"
+            fill
+            sizes="(min-width: 1024px) 320px, (min-width: 640px) 50vw, 100vw"
+            className="object-cover"
           />
         ) : (
           "🐱"

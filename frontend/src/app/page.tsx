@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function Home() {
   return (
     <>
@@ -16,12 +18,12 @@ export default function Home() {
             Share their story with friends. Build a living digital twin.
           </p>
           <div className="flex items-center justify-center gap-4">
-            <a
+            <Link
               href="/register"
               className="px-6 py-3 bg-primary text-primary-foreground text-sm uppercase tracking-wider hover:opacity-90 transition-opacity"
             >
               Get Started
-            </a>
+            </Link>
             <a
               href="#features"
               className="px-6 py-3 bg-secondary text-secondary-foreground text-sm uppercase tracking-wider hover:opacity-80 transition-opacity"

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { eq, and, desc } from "drizzle-orm";
@@ -69,12 +70,14 @@ export default async function CatProfilePage({
       {/* Header */}
       <div className="flex items-start justify-between mb-8">
         <div className="flex gap-6">
-          <div className="w-24 h-24 bg-sunshine-300/30 flex items-center justify-center text-5xl shrink-0">
+          <div className="relative w-24 h-24 bg-sunshine-300/30 flex items-center justify-center text-5xl shrink-0 overflow-hidden">
             {cat.avatarUrl ? (
-              <img
+              <Image
                 src={cat.avatarUrl}
                 alt={cat.name}
-                className="w-full h-full object-cover"
+                fill
+                sizes="96px"
+                className="object-cover"
               />
             ) : (
               "🐱"
