@@ -25,6 +25,28 @@
 
 ## 变更记录
 
+### 2026-04-09 — 修复中文猫名 slug 路由 404
+
+**Bugfix: Non-ASCII slug causes 404 on Vercel**
+- 问题: 用中文名（如"老四"）创建猫 profile 后，slug 保留了中文字符，Vercel 路由层无法匹配非 ASCII 路径，导致点击猫卡片返回 404
+- 修复: 引入 `transliteration` 库，中文名自动转拼音（如 `老四` → `lao-si`、`小花猫` → `xiao-hua-mao`），英文名不受影响
+- 数据库中已有的中文 slug 已更新为拼音：`老四` → `lao-si`
+- 已重新部署到 Vercel 并验证修复生效
+- 涉及文件: `src/actions/cat.ts`, `package.json`
+
+### 2026-04-09 — Vercel 部署 + Neon Postgres
+
+**Phase 12: Production Deployment**
+- 在 Vercel Dashboard 创建 Neon Postgres 数据库（区域 us-east-1），Vercel 自动注入 `DATABASE_URL` 等环境变量
+- `vercel env pull .env.local` 拉取云端环境变量到本地，本地开发可直连云端数据库
+- `pnpm db:push` 将 Drizzle schema（5 张表、2 个 enum）推送到 Neon 数据库
+- 生成随机 `AUTH_SECRET` 并添加到 Vercel Production + Development 环境变量
+- `vercel --prod` 首次生产部署成功，13 个路由全部正常
+- 新增 `ref/DEPLOYMENT.md` 部署指南文档，覆盖环境模型、数据库配置、部署流程、迁移工作流和常见问题
+- Production URL: `https://cathub-bice.vercel.app`
+- 待补充：Preview 环境的 `AUTH_SECRET`（CLI bug 导致无法通过命令行添加，需在 Dashboard 手动设置）
+- 涉及文件: `.env.local`, `ref/DEPLOYMENT.md`
+
 ### 2026-04-08 — MVP 补全：账户设置页
 
 **Phase 6: Account Settings + 代码整洁**
@@ -159,8 +181,10 @@
 
 ## 待完成
 
-- [ ] 数据库部署（Neon/Supabase/Vercel Postgres — 待定）
-- [ ] Vercel 部署配置
+- [x] ~~数据库部署~~ → Neon Postgres via Vercel Storage（2026-04-09 完成）
+- [x] ~~Vercel 部署配置~~ → Production: `cathub-bice.vercel.app`（2026-04-09 完成）
+- [ ] Preview 环境 `AUTH_SECRET` 配置（Dashboard 手动添加）
+- [ ] 头像上传迁移到 Vercel Blob（当前本地文件系统在 Serverless 环境不持久化）
 - [ ] 社交时间线 (Phase 6, Tab 占位已留)
 - [ ] 响应式细节优化
 - [ ] SEO metadata 完善

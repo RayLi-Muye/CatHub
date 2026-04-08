@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { eq, and } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { slugify as transliterate } from "transliteration";
 import { db } from "@/lib/db";
 import { catImages, cats, users } from "@/lib/db/schema";
 import { auth } from "@/lib/auth";
@@ -21,11 +22,7 @@ export type CatActionState = {
 };
 
 function slugify(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9\u4e00-\u9fff]+/g, "-")
-    .replace(/^-|-$/g, "")
-    .slice(0, 100) || "cat";
+  return transliterate(name, { lowercase: true, separator: "-" }).slice(0, 100) || `cat-${Date.now().toString(36)}`;
 }
 
 export async function createCat(
