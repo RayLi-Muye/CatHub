@@ -1,35 +1,8 @@
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1">
-      {/* Nav */}
-      <nav className="sticky top-0 z-50 flex items-center justify-between px-10 py-4 bg-[var(--background)]/92 backdrop-blur-xl border-b border-border">
-        <div className="flex items-center gap-2.5">
-          <div className="flex gap-0.5">
-            <span className="w-1.5 h-[18px] bg-bright-yellow" />
-            <span className="w-1.5 h-[18px] bg-sunshine-700" />
-            <span className="w-1.5 h-[18px] bg-brand-block-orange" />
-            <span className="w-1.5 h-[18px] bg-brand-orange" />
-          </div>
-          <span className="text-lg tracking-tight">CatHub</span>
-        </div>
-        <div className="flex items-center gap-3">
-          <a
-            href="/login"
-            className="px-3 py-2 text-sm text-foreground/60 hover:text-foreground transition-colors"
-          >
-            LOG IN
-          </a>
-          <a
-            href="/register"
-            className="px-3 py-2 text-sm bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
-          >
-            SIGN UP
-          </a>
-        </div>
-      </nav>
-
+    <>
       {/* Hero */}
-      <main className="flex-1 flex flex-col items-center justify-center px-8 py-24">
+      <section className="flex-1 flex flex-col items-center justify-center px-8 py-24">
         <div className="max-w-4xl w-full text-center">
           <p className="text-sm uppercase tracking-[2.52px] text-brand-orange mb-8">
             AI CAT DIGITAL TWIN
@@ -57,7 +30,7 @@ export default function Home() {
             </a>
           </div>
         </div>
-      </main>
+      </section>
 
       {/* Features */}
       <section id="features" className="px-8 py-24 bg-card">
@@ -102,24 +75,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="px-8 py-12 border-t border-border">
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="flex gap-0.5">
-              <span className="w-1 h-3 bg-bright-yellow" />
-              <span className="w-1 h-3 bg-sunshine-700" />
-              <span className="w-1 h-3 bg-brand-block-orange" />
-              <span className="w-1 h-3 bg-brand-orange" />
-            </div>
-            <span className="text-sm">CatHub</span>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            Built for cats and their humans
-          </p>
-        </div>
-      </footer>
-    </div>
+    </>
   );
 }
