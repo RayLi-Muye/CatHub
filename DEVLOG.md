@@ -18,12 +18,29 @@
 - **项目**: CatHub — AI 猫数字孪生平台
 - **仓库**: https://github.com/RayLi-Muye/CatHub
 - **技术栈**: Next.js 16 + TypeScript + Tailwind v4 + shadcn/ui + Drizzle ORM + PostgreSQL + Auth.js v5 + Zod 4 + pnpm
-- **设计风格**: Mistral AI 暖色系（详见 `frontend/ref/DESIGN.md`）
+- **设计风格**: Mistral AI 暖色系（详见 `ref/DESIGN.md`）
 - **三大 Epic**: 数字身份(Profile) > 健康追踪(Health) > 社交时间线(Social, 待实现)
 
 ---
 
 ## 变更记录
+
+### 2026-04-10 — 用户头像上传 + Vercel Blob 存储迁移
+
+**Phase 13: Avatar Upload & Cloud Storage**
+- 图片存储从本地文件系统（`public/uploads/`）迁移到 **Vercel Blob**（云端持久化）
+  - `cat-images.ts` 重写：`fs.writeFile` → `@vercel/blob` 的 `put`/`del`
+  - 猫头像上传路径 `cats/{filename}`，用户头像 `users/{filename}`
+  - `deleteStoredAvatar()` 只处理 `https://` URL，兼容旧本地路径
+- 在 Vercel Dashboard 创建 **cathub-blob** Blob Store（public, iad1 区域），连接到所有环境
+- `next.config.ts` 添加 `*.public.blob.vercel-storage.com` 图片域名白名单
+- 新增**用户头像上传**功能：
+  - Settings 页面 Profile Settings 区域新增头像上传 UI（预览 + 文件选择）
+  - `updateProfile` action 处理 multipart/form-data，上传到 Vercel Blob，更新 `users.avatar_url`
+  - 上传新头像时自动删除旧头像（从 Blob store 清理）
+- 用户头像显示在三个位置：导航栏 UserMenu、Settings 页面、公开 Profile 页面（`/{username}`）
+- Auth.js session callback 已有 `image: user.avatarUrl` 映射，无需额外改动
+- 涉及文件: `src/lib/storage/cat-images.ts`, `src/actions/user.ts`, `src/components/settings/profile-settings-form.tsx`, `src/components/layout/user-menu.tsx`, `src/app/[username]/page.tsx`, `src/app/(main)/settings/page.tsx`, `next.config.ts`, `package.json`
 
 ### 2026-04-09 — 修复中文猫名 slug 路由 404
 
@@ -101,7 +118,7 @@
 ### 2026-04-08 — Vercel 本地仿真继续推进
 
 **Phase 11: Link Project / Fix Framework Detection**
-- 已在 Vercel 团队 `ray's projects` 下创建并链接 `cathub` 项目，`frontend/.vercel/project.json` 已写入项目与团队 ID
+- 已在 Vercel 团队 `ray's projects` 下创建并链接 `cathub` 项目，`.vercel/project.json` 已写入项目与团队 ID
 - 验证发现新建项目的 Framework Preset 默认为 `Other`，`vercel dev` 在 Windows 上因此误落到默认开发命令路径，并触发 `yarn` 命令不存在的问题
 - 新增 `vercel.json`，显式将框架声明为 `nextjs`，让本地 `vercel dev` 按 Next.js 路径运行
 - 当前云端环境变量仍为空；真实业务流程仍需要可用的 PostgreSQL `DATABASE_URL`
@@ -183,8 +200,9 @@
 
 - [x] ~~数据库部署~~ → Neon Postgres via Vercel Storage（2026-04-09 完成）
 - [x] ~~Vercel 部署配置~~ → Production: `cathub-bice.vercel.app`（2026-04-09 完成）
-- [ ] Preview 环境 `AUTH_SECRET` 配置（Dashboard 手动添加）
-- [ ] 头像上传迁移到 Vercel Blob（当前本地文件系统在 Serverless 环境不持久化）
+- [x] ~~Preview 环境 `AUTH_SECRET` 配置~~ → Dashboard 手动添加（2026-04-10 完成）
+- [x] ~~头像上传迁移到 Vercel Blob~~ → 用户 + 猫头像均已迁移（2026-04-10 完成）
+- [ ] GitHub 自动部署（Vercel Git Integration，push 自动触发）
 - [ ] 社交时间线 (Phase 6, Tab 占位已留)
 - [ ] 响应式细节优化
 - [ ] SEO metadata 完善

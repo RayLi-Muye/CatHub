@@ -4,6 +4,8 @@ import { compare, hash } from "bcryptjs";
 import { eq, or } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { put, del } from "@vercel/blob";
+import { randomUUID } from "node:crypto";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { cats, users } from "@/lib/db/schema";
@@ -11,6 +13,14 @@ import {
   accountSettingsSchema,
   profileSchema,
 } from "@/lib/validators/user";
+
+const ALLOWED_IMAGE_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+]);
+const MAX_AVATAR_SIZE = 5 * 1024 * 1024;
 
 export type UserSettingsState = {
   error?: string;
@@ -48,8 +58,29 @@ export async function updateProfile(
     return { fieldErrors: collectFieldErrors(result.error) };
   }
 
+  // Handle avatar upload
+  const avatarFile = formData.get("avatar");
+  let newAvatarUrl: string | undefined;
+
+  if (avatarFile instanceof File && avatarFile.size > 0) {
+    if (!ALLOWED_IMAGE_TYPES.has(avatarFile.type)) {
+      return { fieldErrors: { avatar: ["Avatar must be a PNG, JPG, WEBP, or GIF image"] } };
+    }
+    if (avatarFile.size > MAX_AVATAR_SIZE) {
+      return { fieldErrors: { avatar: ["Avatar must be 5 MB or smaller"] } };
+    }
+
+    const ext = avatarFile.type.split("/")[1] === "jpeg" ? "jpg" : avatarFile.type.split("/")[1];
+    const filename = `users/${userId}-${randomUUID()}.${ext}`;
+    const blob = await put(filename, avatarFile, {
+      access: "public",
+      addRandomSuffix: false,
+    });
+    newAvatarUrl = blob.url;
+  }
+
   const [user] = await db
-    .select({ username: users.username })
+    .select({ username: users.username, avatarUrl: users.avatarUrl })
     .from(users)
     .where(eq(users.id, userId))
     .limit(1);
@@ -63,9 +94,15 @@ export async function updateProfile(
     .set({
       displayName: result.data.displayName ?? null,
       bio: result.data.bio ?? null,
+      ...(newAvatarUrl ? { avatarUrl: newAvatarUrl } : {}),
       updatedAt: new Date(),
     })
     .where(eq(users.id, userId));
+
+  // Delete old avatar from blob storage
+  if (newAvatarUrl && user.avatarUrl?.startsWith("https://")) {
+    try { await del(user.avatarUrl); } catch { /* ignore */ }
+  }
 
   revalidatePath("/settings");
   revalidatePath("/dashboard");

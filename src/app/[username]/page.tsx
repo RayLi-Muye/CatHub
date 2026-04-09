@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
@@ -30,8 +31,18 @@ export default async function UserProfilePage({
   return (
     <div className="max-w-5xl mx-auto w-full px-6 md:px-8 py-16">
       <div className="mb-12">
-        <div className="w-16 h-16 bg-sunshine-700 flex items-center justify-center text-white text-2xl mb-4">
-          {(user.displayName ?? user.username)[0].toUpperCase()}
+        <div className="relative w-16 h-16 bg-sunshine-700 flex items-center justify-center text-white text-2xl mb-4 overflow-hidden">
+          {user.avatarUrl ? (
+            <Image
+              src={user.avatarUrl}
+              alt={user.displayName ?? user.username}
+              fill
+              sizes="64px"
+              className="object-cover"
+            />
+          ) : (
+            (user.displayName ?? user.username)[0].toUpperCase()
+          )}
         </div>
         <h1 className="text-4xl mb-1">{user.displayName ?? user.username}</h1>
         <p className="text-muted-foreground">@{user.username}</p>

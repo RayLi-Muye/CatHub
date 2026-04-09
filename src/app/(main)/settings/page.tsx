@@ -17,6 +17,7 @@ export default async function SettingsPage() {
       email: users.email,
       displayName: users.displayName,
       bio: users.bio,
+      avatarUrl: users.avatarUrl,
       createdAt: users.createdAt,
     })
     .from(users)
@@ -43,6 +44,7 @@ export default async function SettingsPage() {
           <ProfileSettingsForm
             displayName={user.displayName}
             bio={user.bio}
+            avatarUrl={user.avatarUrl}
           />
           <CredentialsSettingsForm username={user.username} email={user.email} />
         </div>

@@ -46,11 +46,11 @@ vercel login          # 浏览器授权登录
 vercel link           # 将本地目录链接到 Vercel 项目
 ```
 
-链接后会生成 `frontend/.vercel/project.json`，包含项目和团队 ID。
+链接后会生成 `.vercel/project.json`，包含项目和团队 ID。
 
 ### 2. 框架设置
 
-`frontend/vercel.json` 已声明框架：
+`vercel.json` 已声明框架：
 
 ```json
 {
@@ -61,11 +61,7 @@ vercel link           # 将本地目录链接到 Vercel 项目
 
 ### 3. 根目录（Root Directory）
 
-由于仓库结构为 monorepo（代码在 `frontend/` 子目录），需在 Vercel Dashboard 设置：
-
-**Settings → General → Root Directory** → 填写 `frontend`
-
-或者在首次部署时 Vercel 会自动检测到 `vercel.json` 所在目录。
+项目根目录即为 Next.js 应用根目录，Vercel Root Directory 保持默认（`.`）即可。
 
 ---
 
@@ -246,7 +242,7 @@ MVP 阶段可暂时跳过头像功能，或使用 Vercel Blob 替代。
 ### Q: `pnpm build` 本地能过但 Vercel 构建失败？
 
 1. 检查 Vercel 构建日志（Dashboard → Deployments → 点击失败的部署）
-2. 确认 Root Directory 设置为 `frontend`
+2. 确认 Root Directory 设置为 `.`（项目根目录）
 3. 确认 Node.js 版本匹配（Vercel Settings → General → Node.js Version）
 4. 确认所有环境变量已在 Vercel 中配置
 

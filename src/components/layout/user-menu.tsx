@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
 import type { Session } from "next-auth";
@@ -29,10 +30,20 @@ export function UserMenu({ user }: { user: Session["user"] }) {
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="w-9 h-9 flex items-center justify-center bg-sunshine-700 text-white text-sm font-medium"
+        className="w-9 h-9 flex items-center justify-center bg-sunshine-700 text-white text-sm font-medium overflow-hidden relative"
         aria-label="User menu"
       >
-        {initials}
+        {user?.image ? (
+          <Image
+            src={user.image}
+            alt="Avatar"
+            fill
+            sizes="36px"
+            className="object-cover"
+          />
+        ) : (
+          initials
+        )}
       </button>
 
       {open && (
