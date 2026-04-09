@@ -25,6 +25,15 @@
 
 ## 变更记录
 
+### 2026-04-10 — 项目结构扁平化 + GitHub 自动部署
+
+**Phase 14: Flatten & Auto-Deploy**
+- 将 `frontend/` 子目录的所有内容移到项目根目录，消除不必要的 monorepo 结构
+- Vercel Git Integration 连接 GitHub 仓库，`git push origin main` 自动触发 Production 部署
+- 更新 `DEVLOG.md`、`ref/DEPLOYMENT.md` 中所有 `frontend/` 路径引用
+- 首次自动部署验证通过（48s，● Ready）
+- 涉及文件: 全部文件从 `frontend/` 移至根目录
+
 ### 2026-04-10 — 用户头像上传 + Vercel Blob 存储迁移
 
 **Phase 13: Avatar Upload & Cloud Storage**
@@ -202,7 +211,8 @@
 - [x] ~~Vercel 部署配置~~ → Production: `cathub-bice.vercel.app`（2026-04-09 完成）
 - [x] ~~Preview 环境 `AUTH_SECRET` 配置~~ → Dashboard 手动添加（2026-04-10 完成）
 - [x] ~~头像上传迁移到 Vercel Blob~~ → 用户 + 猫头像均已迁移（2026-04-10 完成）
-- [ ] GitHub 自动部署（Vercel Git Integration，push 自动触发）
+- [x] ~~GitHub 自动部署~~ → Vercel Git Integration，push 自动触发（2026-04-10 完成）
+- [x] ~~项目结构扁平化~~ → `frontend/` 移至根目录（2026-04-10 完成）
 - [ ] 社交时间线 (Phase 6, Tab 占位已留)
 - [ ] 响应式细节优化
 - [ ] SEO metadata 完善

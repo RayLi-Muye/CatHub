@@ -22,7 +22,7 @@ export function ProfileTabs({
   const tabs: Tab[] = [
     { label: "Overview", href: base },
     { label: "Health", href: `${base}/health` },
-    { label: "Timeline", href: `${base}/timeline`, disabled: true },
+    { label: "Timeline", href: `${base}/timeline` },
   ];
 
   return (

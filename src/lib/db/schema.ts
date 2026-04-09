@@ -122,3 +122,20 @@ export const weightLogs = pgTable("weight_logs", {
   recordedAt: timestamp("recorded_at", { mode: "date" }).notNull(),
   notes: text("notes"),
 });
+
+// ===== Timeline Posts =====
+
+export const timelinePosts = pgTable("timeline_posts", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  catId: uuid("cat_id")
+    .notNull()
+    .references(() => cats.id, { onDelete: "cascade" }),
+  authorId: uuid("author_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  content: text("content").notNull(),
+  imageUrl: text("image_url"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
