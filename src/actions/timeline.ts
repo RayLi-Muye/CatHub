@@ -1,6 +1,6 @@
 "use server";
 
-import { eq, and } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { put, del } from "@vercel/blob";
@@ -49,9 +49,23 @@ export async function createTimelinePost(
     return { error: "Cat not found or access denied" };
   }
 
+  // Parse health alert flag and tags
+  const isHealthAlert = formData.get("isHealthAlert") === "on";
+  const tagsRaw = formData.get("tags") as string | null;
+  const tags = tagsRaw
+    ? tagsRaw
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean)
+    : null;
+
   // Handle optional image
   let imageUrl: string | null = null;
+  let videoUrl: string | null = null;
+  let mediaType: "none" | "image" | "video" = "none";
+
   const imageFile = formData.get("image");
+  const videoUrlFromClient = formData.get("videoUrl") as string | null;
 
   if (imageFile instanceof File && imageFile.size > 0) {
     if (!ALLOWED_IMAGE_TYPES.has(imageFile.type)) {
@@ -71,6 +85,11 @@ export async function createTimelinePost(
       addRandomSuffix: false,
     });
     imageUrl = blob.url;
+    mediaType = "image";
+  } else if (videoUrlFromClient) {
+    // Video was uploaded client-side via Blob client upload
+    videoUrl = videoUrlFromClient;
+    mediaType = "video";
   }
 
   await db.insert(timelinePosts).values({
@@ -78,6 +97,10 @@ export async function createTimelinePost(
     authorId: session.user.id,
     content,
     imageUrl,
+    videoUrl,
+    mediaType,
+    isHealthAlert,
+    tags,
   });
 
   const [user] = await db
@@ -106,6 +129,7 @@ export async function deleteTimelinePost(
       authorId: timelinePosts.authorId,
       catId: timelinePosts.catId,
       imageUrl: timelinePosts.imageUrl,
+      videoUrl: timelinePosts.videoUrl,
     })
     .from(timelinePosts)
     .where(eq(timelinePosts.id, postId))
@@ -115,10 +139,13 @@ export async function deleteTimelinePost(
     return { error: "Post not found or access denied" };
   }
 
-  // Delete image from blob if present
-  if (post.imageUrl?.startsWith("https://")) {
+  // Delete media from blob if present
+  const urlsToDelete = [post.imageUrl, post.videoUrl].filter(
+    (url): url is string => !!url?.startsWith("https://")
+  );
+  for (const url of urlsToDelete) {
     try {
-      await del(post.imageUrl);
+      await del(url);
     } catch {
       /* ignore */
     }

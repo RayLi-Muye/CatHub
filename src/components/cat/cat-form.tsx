@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useActionState } from "react";
 import type { CatActionState } from "@/actions/cat";
+import { compressImage } from "@/lib/media/compress";
 
 type CatData = {
   name?: string;
@@ -52,10 +53,18 @@ export function CatForm({
           name="avatar"
           type="file"
           accept="image/png,image/jpeg,image/webp,image/gif"
+          onChange={async (e) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            const compressed = await compressImage(file);
+            const dt = new DataTransfer();
+            dt.items.add(compressed);
+            e.target.files = dt.files;
+          }}
           className="w-full px-4 py-3 bg-card border border-border text-foreground file:mr-4 file:border-0 file:bg-primary file:px-3 file:py-2 file:text-sm file:text-primary-foreground"
         />
         <p className="mt-2 text-sm text-muted-foreground">
-          PNG, JPG, WEBP, or GIF. Up to 5 MB.
+          PNG, JPG, WEBP, or GIF. Auto-compressed before upload.
         </p>
         {state.fieldErrors?.avatar && (
           <p className="mt-1 text-sm text-destructive">

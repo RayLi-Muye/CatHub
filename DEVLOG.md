@@ -19,11 +19,53 @@
 - **仓库**: https://github.com/RayLi-Muye/CatHub
 - **技术栈**: Next.js 16 + TypeScript + Tailwind v4 + shadcn/ui + Drizzle ORM + PostgreSQL + Auth.js v5 + Zod 4 + pnpm
 - **设计风格**: Mistral AI 暖色系（详见 `ref/DESIGN.md`）
-- **三大 Epic**: 数字身份(Profile) > 健康追踪(Health) > 社交时间线(Social, 待实现)
+- **三大 Epic**: 数字身份(Profile) > 健康追踪(Health) > 社交时间线(Social)
 
 ---
 
 ## 变更记录
+
+### 2026-04-11 — Profile 增强 Phase 1: 日常打卡 + 视频支持 + 媒体压缩
+
+**数据库变更:**
+- 新增枚举: `post_media_type` (none/image/video), `bowel_status` (normal/soft/hard/diarrhea/constipation/none)
+- 新增表: `daily_checkins` — 每日状态打卡（食欲1-5、精力1-5、排便状态、心情emoji、备注），每猫每天限一条（唯一索引 catId+date）
+- 扩展表: `timeline_posts` 新增列 — `video_url`, `media_type`, `is_health_alert`, `tags`
+- 迁移文件: `drizzle/0001_lush_zodiak.sql`
+
+**媒体压缩管线:**
+- 图片: `browser-image-compression` 客户端自动压缩（WebP, ≤1MB, max 1920px），所有上传入口统一走压缩
+- 视频: 客户端预检（30s/720p/20MB），通过 Vercel Blob 客户端直传（绕过 serverless 内存限制）
+- 改造: cat-form、profile-settings-form、post-form 均接入压缩管线
+
+**新增功能:**
+- 每日打卡表单: emoji 选择食欲/精力/心情 + 排便分段按钮 + 可选备注，无需打字即可记录
+- 视频帖子: 时间线支持上传视频（MP4/WebM/MOV），原生 video 播放器
+- 健康警示标签: 发帖时可标记"Health Alert"，时间线中醒目显示红色标签
+- 打卡摘要卡片: 已打卡时显示今日状态摘要，未打卡时显示打卡表单
+
+**涉及文件:**
+- Schema: `src/lib/db/schema.ts`
+- 新建: `src/lib/media/compress.ts`, `src/lib/media/video-check.ts`, `src/lib/validators/checkin.ts`, `src/lib/validators/timeline.ts`, `src/app/api/blob/upload/route.ts`, `src/actions/checkin.ts`, `src/components/checkin/daily-checkin-form.tsx`, `src/components/checkin/checkin-summary.tsx`, `src/components/timeline/video-player.tsx`
+- 修改: `src/actions/timeline.ts`, `src/components/timeline/post-form.tsx`, `src/components/cat/cat-form.tsx`, `src/components/settings/profile-settings-form.tsx`, `src/app/[username]/[catname]/timeline/page.tsx`
+- 依赖: `browser-image-compression`
+
+### 2026-04-10 — 社交时间线 MVP
+
+**Phase 15: Social Timeline**
+- 新增 `timeline_posts` 表（content, image_url, cat_id, author_id, created_at）
+- 发帖 Server Action：文字必填（最长 1000 字符）+ 可选图片（Vercel Blob 存储）
+- 删帖 Server Action：验证所有权，清理 Blob 图片
+- Timeline 页面 `/{username}/{catname}/timeline`：时间线列表 + 发帖表单（仅主人可见）
+- 启用 Profile Tabs 中的 Timeline tab（之前为 disabled 占位）
+- 涉及文件: `src/lib/db/schema.ts`, `src/actions/timeline.ts`, `src/app/[username]/[catname]/timeline/page.tsx`, `src/components/timeline/post-form.tsx`, `src/components/timeline/delete-post-button.tsx`, `src/components/cat/profile-tabs.tsx`
+
+### 2026-04-11 — 自定义域名 cathub.ai 上线
+
+- Vercel 添加 `cathub.ai` + `www.cathub.ai` 自定义域名
+- Cloudflare DNS 配置完成：A 记录 `@` → `76.76.21.21`，CNAME `www` → `cname.vercel-dns.com`（均为 DNS only 模式）
+- Vercel 自动签发 SSL 证书，HTTPS 可用
+- 域名已生效，项目正式上线 **https://cathub.ai**
 
 ### 2026-04-10 — 项目结构扁平化 + GitHub 自动部署
 
@@ -213,6 +255,6 @@
 - [x] ~~头像上传迁移到 Vercel Blob~~ → 用户 + 猫头像均已迁移（2026-04-10 完成）
 - [x] ~~GitHub 自动部署~~ → Vercel Git Integration，push 自动触发（2026-04-10 完成）
 - [x] ~~项目结构扁平化~~ → `frontend/` 移至根目录（2026-04-10 完成）
-- [ ] 社交时间线 (Phase 6, Tab 占位已留)
+- [x] ~~社交时间线~~ → Timeline MVP 完成（2026-04-10）
 - [ ] 响应式细节优化
 - [ ] SEO metadata 完善

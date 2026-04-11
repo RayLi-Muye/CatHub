@@ -25,6 +25,21 @@ export const healthRecordTypeEnum = pgEnum("health_record_type", [
   "other",
 ]);
 
+export const postMediaTypeEnum = pgEnum("post_media_type", [
+  "none",
+  "image",
+  "video",
+]);
+
+export const bowelStatusEnum = pgEnum("bowel_status", [
+  "normal",
+  "soft",
+  "hard",
+  "diarrhea",
+  "constipation",
+  "none",
+]);
+
 // ===== Users =====
 
 export const users = pgTable("users", {
@@ -135,7 +150,38 @@ export const timelinePosts = pgTable("timeline_posts", {
     .references(() => users.id, { onDelete: "cascade" }),
   content: text("content").notNull(),
   imageUrl: text("image_url"),
+  videoUrl: text("video_url"),
+  mediaType: postMediaTypeEnum("media_type").default("none"),
+  isHealthAlert: boolean("is_health_alert").default(false),
+  tags: json("tags").$type<string[]>(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
 });
+
+// ===== Daily Check-ins =====
+
+export const dailyCheckins = pgTable(
+  "daily_checkins",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    catId: uuid("cat_id")
+      .notNull()
+      .references(() => cats.id, { onDelete: "cascade" }),
+    authorId: uuid("author_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    date: timestamp("date", { mode: "date" }).notNull(),
+    appetiteScore: integer("appetite_score").notNull(),
+    energyScore: integer("energy_score").notNull(),
+    bowelStatus: bowelStatusEnum("bowel_status").notNull(),
+    moodEmoji: varchar("mood_emoji", { length: 10 }),
+    notes: text("notes"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("checkins_cat_date_idx").on(table.catId, table.date),
+  ]
+);

@@ -2,11 +2,14 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { eq, and, desc } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { users, cats, timelinePosts } from "@/lib/db/schema";
+import { users, cats, timelinePosts, dailyCheckins } from "@/lib/db/schema";
 import { auth } from "@/lib/auth";
 import { ProfileTabs } from "@/components/cat/profile-tabs";
 import { PostForm } from "@/components/timeline/post-form";
 import { DeletePostButton } from "@/components/timeline/delete-post-button";
+import { VideoPlayer } from "@/components/timeline/video-player";
+import { DailyCheckinForm } from "@/components/checkin/daily-checkin-form";
+import { CheckinSummary } from "@/components/checkin/checkin-summary";
 
 function timeAgo(date: Date): string {
   const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
@@ -47,6 +50,17 @@ export default async function TimelinePage({
   const isOwner = session?.user?.id === user.id;
   if (!cat.isPublic && !isOwner) notFound();
 
+  // Fetch today's check-in
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const [todayCheckin] = await db
+    .select()
+    .from(dailyCheckins)
+    .where(
+      and(eq(dailyCheckins.catId, cat.id), eq(dailyCheckins.date, today))
+    )
+    .limit(1);
+
   const posts = await db
     .select()
     .from(timelinePosts)
@@ -63,6 +77,17 @@ export default async function TimelinePage({
       </div>
 
       <ProfileTabs username={username} catname={catname} />
+
+      {/* Daily Check-in Section (owner only) */}
+      {isOwner && (
+        <div className="mb-6">
+          {todayCheckin ? (
+            <CheckinSummary checkin={todayCheckin} />
+          ) : (
+            <DailyCheckinForm catId={cat.id} />
+          )}
+        </div>
+      )}
 
       {isOwner && <PostForm catId={cat.id} />}
 
@@ -92,11 +117,16 @@ export default async function TimelinePage({
                       "🐱"
                     )}
                   </div>
-                  <div>
+                  <div className="flex items-center gap-2">
                     <span className="text-sm font-medium">{cat.name}</span>
-                    <span className="text-xs text-muted-foreground ml-2">
+                    <span className="text-xs text-muted-foreground">
                       {timeAgo(post.createdAt)}
                     </span>
+                    {post.isHealthAlert && (
+                      <span className="text-[10px] px-1.5 py-0.5 bg-red-500/15 text-red-600 dark:text-red-400 uppercase tracking-wider">
+                        🚨 Health Alert
+                      </span>
+                    )}
                   </div>
                 </div>
                 {isOwner && <DeletePostButton postId={post.id} />}
@@ -115,6 +145,12 @@ export default async function TimelinePage({
                     height={400}
                     className="w-full h-auto object-cover"
                   />
+                </div>
+              )}
+
+              {post.videoUrl && (
+                <div className="mt-3">
+                  <VideoPlayer src={post.videoUrl} />
                 </div>
               )}
             </article>

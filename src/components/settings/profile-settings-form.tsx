@@ -3,6 +3,7 @@
 import { useActionState, useRef, useState } from "react";
 import Image from "next/image";
 import { updateProfile, type UserSettingsState } from "@/actions/user";
+import { compressImage } from "@/lib/media/compress";
 
 type ProfileSettingsFormProps = {
   displayName?: string | null;
@@ -24,11 +25,14 @@ export function ProfileSettingsForm({
   const [preview, setPreview] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
-    if (file) {
-      setPreview(URL.createObjectURL(file));
-    }
+    if (!file) return;
+    const compressed = await compressImage(file);
+    const dt = new DataTransfer();
+    dt.items.add(compressed);
+    e.target.files = dt.files;
+    setPreview(URL.createObjectURL(compressed));
   }
 
   const displayedAvatar = preview ?? avatarUrl;
@@ -87,7 +91,7 @@ export function ProfileSettingsForm({
               {displayedAvatar ? "Change avatar" : "Upload avatar"}
             </button>
             <p className="text-xs text-muted-foreground">
-              PNG, JPG, WEBP or GIF. Max 5 MB.
+              PNG, JPG, WEBP or GIF. Auto-compressed.
             </p>
             <input
               ref={fileRef}
