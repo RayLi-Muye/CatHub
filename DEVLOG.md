@@ -25,6 +25,46 @@
 
 ## 变更记录
 
+### 2026-04-12 — Profile 增强 Phase 2: Lineage Graph 内部血缘关联
+
+**数据库变更:**
+- 新增枚举: `lineage_parent_role` (sire/dam/unknown), `lineage_status` (pending/confirmed/disputed/revoked), `lineage_source_type` (internal/external/registry/import)
+- 新增表: `cat_lineage_edges` — 使用 parent -> child 有向边表达猫的血缘 DAG，而不是在 `cats` 表上写死 father/mother 字段
+- 约束与索引:
+  - `lineage_edges_no_self_parent_check` 防止直接自引用
+  - `parent_cat_id`, `child_cat_id`, `created_by_user_id` 外键列均建索引
+  - `child_cat_id + parent_role + status`、`parent_cat_id + status` 复合索引用于递归查询
+  - partial unique index 限制每只猫最多一个 confirmed sire、一个 confirmed dam，并限制同一 parent-child confirmed 边重复写入
+- 迁移文件: `drizzle/0002_flowery_gideon.sql`
+
+**新增功能:**
+- 新增 `/{username}/{catname}/lineage` 页面和 Profile Tabs 中的 Lineage tab
+- 主人可为当前猫从自己名下已有猫中选择 Sire/Dam，完成内部血缘关联
+- Server Action 写入前校验:
+  - 当前用户必须拥有 child 和 parent
+  - parent 不能等于 child
+  - sire 不能选择 female，dam 不能选择 male
+  - 同一 parent-child 不能以不同角色重复确认
+  - 使用 recursive CTE 检测是否会形成祖先/后代循环
+- Lineage 页面支持三代祖先和三代后代递归查询展示；非主人只能看到公开猫，主人可看到自己私有猫关系
+- Lineage 页面现在支持用户选择展示深度，默认 3 代，可通过 `?generations=3|4|5|6|all` 查看更多代；`all` 使用 25 代安全上限防止异常图拖垮页面
+- 移除父母链接时不会物理删除边，而是将 confirmed edge 标记为 `revoked`，保留未来审计/快照扩展空间
+
+**涉及文件:**
+- Schema: `src/lib/db/schema.ts`
+- 新建: `src/actions/lineage.ts`, `src/lib/lineage/queries.ts`, `src/lib/validators/lineage.ts`, `src/app/[username]/[catname]/lineage/page.tsx`, `src/components/lineage/lineage-cat-card.tsx`, `src/components/lineage/lineage-parent-form.tsx`, `src/components/lineage/lineage-generation-selector.tsx`
+- 修改: `src/components/cat/profile-tabs.tsx`, `drizzle/meta/_journal.json`
+
+**验证结果:**
+- `pnpm db:generate` 通过
+- `pnpm lint` 通过
+- `pnpm build` 通过
+- 2026-04-12 追加验证:
+  - `pnpm db:migrate` 因历史库使用过 `db:push` 且 Drizzle migration history 为空，不能从 0000 重放；随后使用当前项目既有方式 `pnpm db:push` 成功将 lineage schema 同步到 Neon
+  - 直接查询 Neon 确认 `cat_lineage_edges` 表、外键、check constraint、partial unique index 和递归查询索引均已存在
+  - 事务内最小数据测试通过：三代祖先递归、三代后代递归、confirmed sire 唯一约束、自引用 check、循环检测 CTE 均通过，事务已 rollback
+  - Vercel dev 页面烟测通过：插入临时公开猫谱后访问 `/{username}/{catname}/lineage` 返回 200，页面包含三代祖先数据；临时测试用户已删除，dev server 已停止
+
 ### 2026-04-11 — Profile 增强 Phase 1: 日常打卡 + 视频支持 + 媒体压缩
 
 **数据库变更:**
@@ -244,6 +284,8 @@
 | `/{username}/{catname}/edit` | 仅主人 | 编辑猫档案 |
 | `/{username}/{catname}/health` | 公开/私有 | 健康时间线 |
 | `/{username}/{catname}/health/new` | 仅主人 | 添加健康记录 |
+| `/{username}/{catname}/lineage` | 公开/私有 | 三代血缘图谱与内部父母关联 |
+| `/{username}/{catname}/timeline` | 公开/私有 | 社交时间线 + 日常打卡 |
 
 ---
 
@@ -256,5 +298,9 @@
 - [x] ~~GitHub 自动部署~~ → Vercel Git Integration，push 自动触发（2026-04-10 完成）
 - [x] ~~项目结构扁平化~~ → `frontend/` 移至根目录（2026-04-10 完成）
 - [x] ~~社交时间线~~ → Timeline MVP 完成（2026-04-10）
+- [x] ~~内部血缘关联~~ → Lineage Graph Phase 2 完成（2026-04-12）
+- [ ] 外部身份码 / 二维码连接请求
+- [ ] Breeding Branch / Litter 繁育计划
+- [ ] 医生三代摘要 / 繁育五代血统书导出
 - [ ] 响应式细节优化
 - [ ] SEO metadata 完善

@@ -9,8 +9,11 @@ import {
   integer,
   numeric,
   json,
+  index,
   uniqueIndex,
+  check,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 // ===== Enums =====
 
@@ -38,6 +41,26 @@ export const bowelStatusEnum = pgEnum("bowel_status", [
   "diarrhea",
   "constipation",
   "none",
+]);
+
+export const lineageParentRoleEnum = pgEnum("lineage_parent_role", [
+  "sire",
+  "dam",
+  "unknown",
+]);
+
+export const lineageStatusEnum = pgEnum("lineage_status", [
+  "pending",
+  "confirmed",
+  "disputed",
+  "revoked",
+]);
+
+export const lineageSourceTypeEnum = pgEnum("lineage_source_type", [
+  "internal",
+  "external",
+  "registry",
+  "import",
 ]);
 
 // ===== Users =====
@@ -106,6 +129,93 @@ export const catImages = pgTable("cat_images", {
     .notNull()
     .defaultNow(),
 });
+
+// ===== Cat Lineage Graph =====
+
+export const catLineageEdges = pgTable(
+  "cat_lineage_edges",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    parentCatId: uuid("parent_cat_id")
+      .notNull()
+      .references(() => cats.id, { onDelete: "cascade" }),
+    childCatId: uuid("child_cat_id")
+      .notNull()
+      .references(() => cats.id, { onDelete: "cascade" }),
+    parentRole: lineageParentRoleEnum("parent_role").notNull(),
+    status: lineageStatusEnum("status").notNull().default("confirmed"),
+    sourceType: lineageSourceTypeEnum("source_type")
+      .notNull()
+      .default("internal"),
+    createdByUserId: uuid("created_by_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    confirmedByUserId: uuid("confirmed_by_user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    notes: text("notes"),
+    identitySnapshot: json("identity_snapshot").$type<{
+      parent: {
+        id: string;
+        ownerId: string;
+        slug: string;
+        name: string;
+        breed: string | null;
+        sex: "male" | "female" | "unknown" | null;
+        birthdate: string | null;
+        avatarUrl: string | null;
+      };
+      child: {
+        id: string;
+        ownerId: string;
+        slug: string;
+        name: string;
+        breed: string | null;
+        sex: "male" | "female" | "unknown" | null;
+        birthdate: string | null;
+        avatarUrl: string | null;
+      };
+    }>(),
+    confirmedAt: timestamp("confirmed_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("lineage_edges_parent_idx").on(table.parentCatId),
+    index("lineage_edges_child_idx").on(table.childCatId),
+    index("lineage_edges_created_by_idx").on(table.createdByUserId),
+    index("lineage_edges_child_role_status_idx").on(
+      table.childCatId,
+      table.parentRole,
+      table.status
+    ),
+    index("lineage_edges_parent_status_idx").on(
+      table.parentCatId,
+      table.status
+    ),
+    uniqueIndex("lineage_edges_parent_child_confirmed_idx")
+      .on(table.parentCatId, table.childCatId)
+      .where(sql`${table.status} = 'confirmed'`),
+    uniqueIndex("lineage_edges_child_sire_confirmed_idx")
+      .on(table.childCatId)
+      .where(
+        sql`${table.parentRole} = 'sire' and ${table.status} = 'confirmed'`
+      ),
+    uniqueIndex("lineage_edges_child_dam_confirmed_idx")
+      .on(table.childCatId)
+      .where(
+        sql`${table.parentRole} = 'dam' and ${table.status} = 'confirmed'`
+      ),
+    check(
+      "lineage_edges_no_self_parent_check",
+      sql`${table.parentCatId} <> ${table.childCatId}`
+    ),
+  ]
+);
 
 // ===== Health Records =====
 

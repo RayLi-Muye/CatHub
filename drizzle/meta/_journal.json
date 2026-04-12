@@ -15,6 +15,13 @@
       "when": 1775914366493,
       "tag": "0001_lush_zodiak",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1775938731342,
+      "tag": "0002_flowery_gideon",
+      "breakpoints": true
     }
   ]
 }

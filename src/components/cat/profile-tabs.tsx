@@ -23,6 +23,7 @@ export function ProfileTabs({
     { label: "Overview", href: base },
     { label: "Health", href: `${base}/health` },
     { label: "Timeline", href: `${base}/timeline` },
+    { label: "Lineage", href: `${base}/lineage` },
   ];
 
   return (
