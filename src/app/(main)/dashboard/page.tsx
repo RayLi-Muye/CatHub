@@ -4,7 +4,17 @@ import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { cats, users } from "@/lib/db/schema";
+import { getLineageConnectionInbox } from "@/lib/lineage/connection-queries";
+import {
+  acceptLineageConnectionRequest,
+  cancelLineageConnectionRequest,
+  declineLineageConnectionRequest,
+} from "@/actions/lineage-connections";
 import { CatCard } from "@/components/cat/cat-card";
+import {
+  IncomingLineageConnectionRequestCard,
+  OutgoingLineageConnectionRequestCard,
+} from "@/components/lineage/lineage-connection-request-card";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -16,11 +26,19 @@ export default async function DashboardPage() {
     .where(eq(users.id, session.user.id))
     .limit(1);
 
-  const myCats = await db
-    .select()
-    .from(cats)
-    .where(eq(cats.ownerId, session.user.id))
-    .orderBy(cats.createdAt);
+  if (!user) redirect("/login");
+
+  const [myCats, lineageInbox] = await Promise.all([
+    db
+      .select()
+      .from(cats)
+      .where(eq(cats.ownerId, session.user.id))
+      .orderBy(cats.createdAt),
+    getLineageConnectionInbox(session.user.id),
+  ]);
+
+  const hasLineageRequests =
+    lineageInbox.incoming.length > 0 || lineageInbox.outgoing.length > 0;
 
   return (
     <div className="max-w-5xl mx-auto w-full px-6 md:px-8 py-16">
@@ -38,6 +56,48 @@ export default async function DashboardPage() {
           Add Cat
         </Link>
       </div>
+
+      {hasLineageRequests && (
+        <section className="mb-12">
+          <div className="mb-4">
+            <p className="text-sm uppercase tracking-[2.52px] text-brand-orange mb-2">
+              LINEAGE REQUESTS
+            </p>
+            <h2 className="text-2xl">External connection review</h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              External identity code links only become confirmed lineage edges
+              after the shared cat owner accepts the request.
+            </p>
+          </div>
+
+          <div className="grid gap-4">
+            {lineageInbox.incoming.map((request) => (
+              <IncomingLineageConnectionRequestCard
+                key={request.id}
+                request={request}
+                acceptAction={acceptLineageConnectionRequest.bind(
+                  null,
+                  request.id
+                )}
+                declineAction={declineLineageConnectionRequest.bind(
+                  null,
+                  request.id
+                )}
+              />
+            ))}
+            {lineageInbox.outgoing.map((request) => (
+              <OutgoingLineageConnectionRequestCard
+                key={request.id}
+                request={request}
+                cancelAction={cancelLineageConnectionRequest.bind(
+                  null,
+                  request.id
+                )}
+              />
+            ))}
+          </div>
+        </section>
+      )}
 
       {myCats.length === 0 ? (
         <div className="p-12 bg-card text-center">

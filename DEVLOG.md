@@ -25,6 +25,44 @@
 
 ## 变更记录
 
+### 2026-04-12 — Profile 增强 Phase 4: External Lineage Connection Requests
+
+**数据库变更:**
+- 新增枚举: `lineage_connection_status` (pending/accepted/declined/canceled)
+- 新增表: `lineage_connection_requests` — 保存跨用户 identity code 血缘连接请求，pending 请求与 confirmed lineage edge 分离
+- 约束与索引:
+  - `lineage_connection_requests_pending_unique_idx` 防止同一 child/parent/role 重复 pending
+  - `lineage_connection_requests_no_self_parent_check` 防止自引用
+  - `lineage_connection_requests_external_users_check` 保证外部请求双方不是同一用户
+  - requester/responder/child/parent/status 均建索引，支持 Dashboard inbox 查询
+- 迁移文件: `drizzle/0004_lame_mariko_yashida.sql`
+
+**新增功能:**
+- Lineage 页新增 owner-only 外部 identity code 请求表单：输入对方分享的 `CAT-XXXX-XXXX-XXXX` 和父母角色后创建 pending request
+- Dashboard 新增外部血缘请求区块：responder 看到 incoming request，requester 看到 outgoing request
+- 新增 accept/decline/cancel Server Actions，所有 mutation 均在 action 内重新鉴权
+- responder accept 后才写入 `cat_lineage_edges`，并记录 `sourceType = external`、`confirmedByUserId`、identity snapshot
+- accept 时复用内部 DAG 校验：自引用、性别角色、重复边、循环检测都会再次检查
+- 抽出 `src/lib/lineage/graph.ts` 统一内部/外部血缘图校验；循环检测不使用显示层代数上限，会递归整条已确认后代路径并用 path 防止无限循环
+- 如果 child 当前同角色已有其他 confirmed parent，accept 会把旧 edge 标记为 `disputed`，再写入新的 confirmed external edge，保留争议历史
+- request/accept/decline/cancel 后会 revalidate Dashboard 和相关 lineage 页面
+
+**涉及文件:**
+- Schema: `src/lib/db/schema.ts`
+- 新建: `src/actions/lineage-connections.ts`, `src/lib/lineage/graph.ts`, `src/lib/lineage/connection-queries.ts`
+- 新建 UI: `src/components/lineage/external-lineage-request-form.tsx`, `src/components/lineage/lineage-connection-request-card.tsx`
+- 修改: `src/actions/lineage.ts`, `src/lib/validators/lineage.ts`, `src/app/(main)/dashboard/page.tsx`, `src/app/[username]/[catname]/lineage/page.tsx`
+
+**验证结果:**
+- `pnpm db:generate` 通过，生成 `drizzle/0004_lame_mariko_yashida.sql`
+- `pnpm db:push` 成功将 `lineage_connection_requests` schema 同步到 Neon
+- `pnpm lint` 通过
+- `pnpm build` 通过
+- 事务内数据库闭环测试通过：创建 pending request、重复 pending 唯一约束、自引用 check、外部双方不同用户 check、accepted request 关联 external confirmed edge 均通过，事务已 rollback
+- 事务内深度递归测试通过：构造 30 代 confirmed descendant 链，cycle check SQL 能识别超过 25 代的候选循环，事务已 rollback
+- Vercel dev 登录态页面烟测通过：responder/requester Dashboard 返回 200 且显示唯一 request note；owner 访问 child Lineage 页返回 200 且显示外部请求表单；临时用户已删除，dev server 已停止
+- 备注：Dashboard action 按钮文本未作为 HTML 断言结果记录，因为 Client Component 边界下按钮可能在水合后渲染；核心请求数据展示已验证
+
 ### 2026-04-12 — Profile 增强 Phase 2: Lineage Graph 内部血缘关联
 
 **数据库变更:**
@@ -334,7 +372,8 @@
 - [x] ~~社交时间线~~ → Timeline MVP 完成（2026-04-10）
 - [x] ~~内部血缘关联~~ → Lineage Graph Phase 2 完成（2026-04-12）
 - [x] ~~主人身份码生成~~ → Owner-only Identity Codes 完成（2026-04-12）
-- [ ] 外部二维码连接请求
+- [x] ~~外部身份码连接请求~~ → External Lineage Connection Requests 完成（2026-04-12）
+- [ ] 二维码生成 / 扫码入口
 - [ ] Breeding Branch / Litter 繁育计划
 - [ ] 医生三代摘要 / 繁育五代血统书导出
 - [ ] 响应式细节优化

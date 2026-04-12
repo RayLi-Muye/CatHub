@@ -63,6 +63,11 @@ export const lineageSourceTypeEnum = pgEnum("lineage_source_type", [
   "import",
 ]);
 
+export const lineageConnectionStatusEnum = pgEnum(
+  "lineage_connection_status",
+  ["pending", "accepted", "declined", "canceled"]
+);
+
 export const catIdentityCodeVisibilityEnum = pgEnum(
   "cat_identity_code_visibility",
   ["private", "public"]
@@ -252,6 +257,102 @@ export const catIdentityCodes = pgTable(
     uniqueIndex("cat_identity_codes_cat_active_idx")
       .on(table.catId)
       .where(sql`${table.isActive} = true`),
+  ]
+);
+
+// ===== External Lineage Connection Requests =====
+
+export const lineageConnectionRequests = pgTable(
+  "lineage_connection_requests",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    requesterUserId: uuid("requester_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    responderUserId: uuid("responder_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    childCatId: uuid("child_cat_id")
+      .notNull()
+      .references(() => cats.id, { onDelete: "cascade" }),
+    parentCatId: uuid("parent_cat_id")
+      .notNull()
+      .references(() => cats.id, { onDelete: "cascade" }),
+    identityCodeId: uuid("identity_code_id").references(
+      () => catIdentityCodes.id,
+      { onDelete: "set null" }
+    ),
+    parentRole: lineageParentRoleEnum("parent_role").notNull(),
+    status: lineageConnectionStatusEnum("status")
+      .notNull()
+      .default("pending"),
+    requestNote: text("request_note"),
+    responseNote: text("response_note"),
+    edgeId: uuid("edge_id").references(() => catLineageEdges.id, {
+      onDelete: "set null",
+    }),
+    identitySnapshot: json("identity_snapshot").$type<{
+      identityCode: string;
+      parent: {
+        id: string;
+        ownerId: string;
+        slug: string;
+        name: string;
+        breed: string | null;
+        sex: "male" | "female" | "unknown" | null;
+        birthdate: string | null;
+        avatarUrl: string | null;
+      };
+      child: {
+        id: string;
+        ownerId: string;
+        slug: string;
+        name: string;
+        breed: string | null;
+        sex: "male" | "female" | "unknown" | null;
+        birthdate: string | null;
+        avatarUrl: string | null;
+      };
+    }>(),
+    respondedAt: timestamp("responded_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("lineage_connection_requests_requester_idx").on(
+      table.requesterUserId
+    ),
+    index("lineage_connection_requests_responder_idx").on(
+      table.responderUserId
+    ),
+    index("lineage_connection_requests_child_idx").on(table.childCatId),
+    index("lineage_connection_requests_parent_idx").on(table.parentCatId),
+    index("lineage_connection_requests_status_idx").on(table.status),
+    index("lineage_connection_requests_responder_status_idx").on(
+      table.responderUserId,
+      table.status,
+      table.createdAt
+    ),
+    index("lineage_connection_requests_requester_status_idx").on(
+      table.requesterUserId,
+      table.status,
+      table.createdAt
+    ),
+    uniqueIndex("lineage_connection_requests_pending_unique_idx")
+      .on(table.childCatId, table.parentCatId, table.parentRole)
+      .where(sql`${table.status} = 'pending'`),
+    check(
+      "lineage_connection_requests_no_self_parent_check",
+      sql`${table.parentCatId} <> ${table.childCatId}`
+    ),
+    check(
+      "lineage_connection_requests_external_users_check",
+      sql`${table.requesterUserId} <> ${table.responderUserId}`
+    ),
   ]
 );
 

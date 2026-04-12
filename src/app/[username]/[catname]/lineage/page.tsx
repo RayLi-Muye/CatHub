@@ -11,11 +11,13 @@ import {
 } from "@/lib/lineage/queries";
 import { setInternalParent, removeLineageEdge } from "@/actions/lineage";
 import { generateCatIdentityCode } from "@/actions/identity-code";
+import { requestExternalLineageConnection } from "@/actions/lineage-connections";
 import { ProfileTabs } from "@/components/cat/profile-tabs";
 import { LineageCatCard } from "@/components/lineage/lineage-cat-card";
 import { LineageParentForm } from "@/components/lineage/lineage-parent-form";
 import { LineageGenerationSelector } from "@/components/lineage/lineage-generation-selector";
 import { IdentityCodeCard } from "@/components/lineage/identity-code-card";
+import { ExternalLineageRequestForm } from "@/components/lineage/external-lineage-request-form";
 
 const MAX_ALL_GENERATIONS = 25;
 
@@ -171,6 +173,10 @@ export default async function LineagePage({
   const setSireAction = setInternalParent.bind(null, cat.id, "sire");
   const setDamAction = setInternalParent.bind(null, cat.id, "dam");
   const generateIdentityCodeAction = generateCatIdentityCode.bind(null, cat.id);
+  const requestExternalLineageAction = requestExternalLineageConnection.bind(
+    null,
+    cat.id
+  );
   const removeSireAction = currentSire
     ? removeLineageEdge.bind(null, currentSire.edgeId)
     : undefined;
@@ -267,6 +273,11 @@ export default async function LineagePage({
               }
               setAction={setDamAction}
               removeAction={removeDamAction}
+            />
+          </div>
+          <div className="mt-4">
+            <ExternalLineageRequestForm
+              requestAction={requestExternalLineageAction}
             />
           </div>
         </section>
