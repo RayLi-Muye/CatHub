@@ -65,6 +65,40 @@
   - 事务内最小数据测试通过：三代祖先递归、三代后代递归、confirmed sire 唯一约束、自引用 check、循环检测 CTE 均通过，事务已 rollback
   - Vercel dev 页面烟测通过：插入临时公开猫谱后访问 `/{username}/{catname}/lineage` 返回 200，页面包含三代祖先数据；临时测试用户已删除，dev server 已停止
 
+### 2026-04-12 — Profile 增强 Phase 3: Owner-only Identity Codes
+
+**数据库变更:**
+- 新增枚举: `cat_identity_code_visibility` (private/public)
+- 新增表: `cat_identity_codes` — 为每只猫保存稳定、随机、不可枚举的全球身份码，用于后续二维码和外部连接请求
+- 约束与索引:
+  - `code` 全局唯一，避免跨用户重复
+  - `cat_identity_codes_cat_active_idx` partial unique index 限制每只猫最多一个 active code
+  - `cat_id`、`created_by_user_id` 外键列均建索引
+- 迁移文件: `drizzle/0003_unique_tenebrous.sql`
+
+**新增功能:**
+- 新增 owner-only 身份码卡片，只在猫主人访问 Lineage 页面时显示
+- 主人可为当前猫生成 private identity code；已有 active code 时复用，不重复生成
+- 生成 action 处理并发重复提交：如果 active-code 唯一索引冲突，会重新读取并复用现有 code
+- 身份码格式为 `CAT-XXXX-XXXX-XXXX`，使用排除易混字符的随机字母表
+- 非主人访问公开 Lineage 页面时不会看到 identity code 卡片，也不会泄露 code
+- 前端显示使用服务端生成的稳定日期字符串，避免 locale 差异造成水合不一致
+
+**涉及文件:**
+- Schema: `src/lib/db/schema.ts`
+- 新建: `src/actions/identity-code.ts`, `src/components/lineage/identity-code-card.tsx`
+- 修改: `src/app/[username]/[catname]/lineage/page.tsx`, `drizzle/meta/_journal.json`
+
+**验证结果:**
+- `pnpm db:generate` 通过
+- `pnpm db:push` 成功将 `cat_identity_codes` schema 同步到 Neon
+- 直接查询 Neon 确认表、enum、unique index、active-code partial unique index 均已存在
+- 事务内约束测试通过：同一只猫不能有多个 active code，code 全局唯一
+- Vercel dev 未登录公开页烟测通过：`/{username}/{catname}/lineage` 返回 200，但不显示 Global Identity 卡片、不泄露 code；临时测试用户已删除，dev server 已停止
+- 复测通过：并发复用逻辑与稳定日期显示改动后，重新跑 `pnpm lint`、`pnpm build`、身份码约束测试、Vercel dev 公开页隐私烟测
+- `pnpm lint` 通过
+- `pnpm build` 通过
+
 ### 2026-04-11 — Profile 增强 Phase 1: 日常打卡 + 视频支持 + 媒体压缩
 
 **数据库变更:**
@@ -299,7 +333,8 @@
 - [x] ~~项目结构扁平化~~ → `frontend/` 移至根目录（2026-04-10 完成）
 - [x] ~~社交时间线~~ → Timeline MVP 完成（2026-04-10）
 - [x] ~~内部血缘关联~~ → Lineage Graph Phase 2 完成（2026-04-12）
-- [ ] 外部身份码 / 二维码连接请求
+- [x] ~~主人身份码生成~~ → Owner-only Identity Codes 完成（2026-04-12）
+- [ ] 外部二维码连接请求
 - [ ] Breeding Branch / Litter 繁育计划
 - [ ] 医生三代摘要 / 繁育五代血统书导出
 - [ ] 响应式细节优化

@@ -1,7 +1,7 @@
 import { and, eq, ne } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
-import { cats, users } from "@/lib/db/schema";
+import { catIdentityCodes, cats, users } from "@/lib/db/schema";
 import { auth } from "@/lib/auth";
 import {
   getAncestorEntries,
@@ -10,10 +10,12 @@ import {
   type LineageEntry,
 } from "@/lib/lineage/queries";
 import { setInternalParent, removeLineageEdge } from "@/actions/lineage";
+import { generateCatIdentityCode } from "@/actions/identity-code";
 import { ProfileTabs } from "@/components/cat/profile-tabs";
 import { LineageCatCard } from "@/components/lineage/lineage-cat-card";
 import { LineageParentForm } from "@/components/lineage/lineage-parent-form";
 import { LineageGenerationSelector } from "@/components/lineage/lineage-generation-selector";
+import { IdentityCodeCard } from "@/components/lineage/identity-code-card";
 
 const MAX_ALL_GENERATIONS = 25;
 
@@ -120,22 +122,39 @@ export default async function LineagePage({
   const isOwner = session?.user?.id === user.id;
   if (!cat.isPublic && !isOwner) notFound();
 
-  const [ancestorEntries, descendantEntries, candidateCats] = await Promise.all([
-    getAncestorEntries(cat.id, generationSelection.depth),
-    getDescendantEntries(cat.id, generationSelection.depth),
-    isOwner
-      ? db
-          .select({
-            id: cats.id,
-            name: cats.name,
-            breed: cats.breed,
-            sex: cats.sex,
-          })
-          .from(cats)
-          .where(and(eq(cats.ownerId, user.id), ne(cats.id, cat.id)))
-          .orderBy(cats.name)
-      : Promise.resolve([]),
-  ]);
+  const [ancestorEntries, descendantEntries, candidateCats, identityCodeRows] =
+    await Promise.all([
+      getAncestorEntries(cat.id, generationSelection.depth),
+      getDescendantEntries(cat.id, generationSelection.depth),
+      isOwner
+        ? db
+            .select({
+              id: cats.id,
+              name: cats.name,
+              breed: cats.breed,
+              sex: cats.sex,
+            })
+            .from(cats)
+            .where(and(eq(cats.ownerId, user.id), ne(cats.id, cat.id)))
+            .orderBy(cats.name)
+        : Promise.resolve([]),
+      isOwner
+        ? db
+            .select({
+              code: catIdentityCodes.code,
+              visibility: catIdentityCodes.visibility,
+              createdAt: catIdentityCodes.createdAt,
+            })
+            .from(catIdentityCodes)
+            .where(
+              and(
+                eq(catIdentityCodes.catId, cat.id),
+                eq(catIdentityCodes.isActive, true)
+              )
+            )
+            .limit(1)
+        : Promise.resolve([]),
+    ]);
 
   const visibleAncestors = filterVisible(ancestorEntries, isOwner);
   const visibleDescendants = filterVisible(descendantEntries, isOwner);
@@ -151,6 +170,7 @@ export default async function LineagePage({
 
   const setSireAction = setInternalParent.bind(null, cat.id, "sire");
   const setDamAction = setInternalParent.bind(null, cat.id, "dam");
+  const generateIdentityCodeAction = generateCatIdentityCode.bind(null, cat.id);
   const removeSireAction = currentSire
     ? removeLineageEdge.bind(null, currentSire.edgeId)
     : undefined;
@@ -171,6 +191,23 @@ export default async function LineagePage({
       </div>
 
       <ProfileTabs username={username} catname={catname} />
+
+      {isOwner && (
+        <IdentityCodeCard
+          identityCode={
+            identityCodeRows[0]
+              ? {
+                  code: identityCodeRows[0].code,
+                  visibility: identityCodeRows[0].visibility,
+                  createdAtLabel: identityCodeRows[0].createdAt
+                    .toISOString()
+                    .slice(0, 10),
+                }
+              : null
+          }
+          generateAction={generateIdentityCodeAction}
+        />
+      )}
 
       <section className="mb-8 flex flex-col gap-3 border border-border bg-card p-4 md:flex-row md:items-center md:justify-between">
         <div>

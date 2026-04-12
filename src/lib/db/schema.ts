@@ -63,6 +63,11 @@ export const lineageSourceTypeEnum = pgEnum("lineage_source_type", [
   "import",
 ]);
 
+export const catIdentityCodeVisibilityEnum = pgEnum(
+  "cat_identity_code_visibility",
+  ["private", "public"]
+);
+
 // ===== Users =====
 
 export const users = pgTable("users", {
@@ -214,6 +219,39 @@ export const catLineageEdges = pgTable(
       "lineage_edges_no_self_parent_check",
       sql`${table.parentCatId} <> ${table.childCatId}`
     ),
+  ]
+);
+
+// ===== Cat Global Identity Codes =====
+
+export const catIdentityCodes = pgTable(
+  "cat_identity_codes",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    catId: uuid("cat_id")
+      .notNull()
+      .references(() => cats.id, { onDelete: "cascade" }),
+    code: varchar("code", { length: 32 }).notNull().unique(),
+    visibility: catIdentityCodeVisibilityEnum("visibility")
+      .notNull()
+      .default("private"),
+    isActive: boolean("is_active").notNull().default(true),
+    createdByUserId: uuid("created_by_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("cat_identity_codes_cat_idx").on(table.catId),
+    index("cat_identity_codes_created_by_idx").on(table.createdByUserId),
+    uniqueIndex("cat_identity_codes_cat_active_idx")
+      .on(table.catId)
+      .where(sql`${table.isActive} = true`),
   ]
 );
 
