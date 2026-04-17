@@ -3,6 +3,10 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Providers } from "@/components/providers";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
+import {
+  CatPawOverlay,
+  GlassOverlay,
+} from "@/components/layout/cat-paw-overlay";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -32,12 +36,16 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col">
-        <Providers>
-          <Navbar />
-          <main className="flex-1 flex flex-col">{children}</main>
-          <Footer />
-        </Providers>
+      <body className="min-h-full">
+        <CatPawOverlay />
+        <GlassOverlay />
+        <div className="relative z-10 min-h-full flex flex-col" style={{ minHeight: "100dvh" }}>
+          <Providers>
+            <Navbar />
+            <main className="flex-1 flex flex-col">{children}</main>
+            <Footer />
+          </Providers>
+        </div>
       </body>
     </html>
   );

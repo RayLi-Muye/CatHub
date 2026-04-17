@@ -61,6 +61,13 @@ Important: this repo uses Next.js 16. Read relevant docs in `node_modules/next/d
 - Health-alert tagging.
 - Daily check-ins for appetite, energy, bowel status, mood, and notes.
 
+### Global Visual Layer
+
+- Site-wide frosted glass overlay blurs a fixed background layer; page content sits above the glass and stays sharp.
+- An SVG cat paw follows the pointer with damped lerp and rotates to face the cursor; on fast motion or ~2.5s idle it performs a claw-swipe pulse in a random warm color.
+- Gated by `(pointer: fine)` and honors `prefers-reduced-motion`.
+- Implementation: `src/components/layout/cat-paw-overlay.tsx`, `.glass-overlay` utility in `src/app/globals.css`, mounted from `src/app/layout.tsx`.
+
 ### Lineage
 
 - `cat_lineage_edges` models parent -> child relationships as a directed acyclic graph.

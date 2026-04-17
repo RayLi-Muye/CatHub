@@ -21,6 +21,21 @@ The lineage system now supports:
 
 ## Recent Changes
 
+### 2026-04-17 - Global Frosted Glass + Cat Paw Cursor
+
+- Added `src/components/layout/cat-paw-overlay.tsx` exporting `CatPawOverlay` and `GlassOverlay`.
+- `CatPawOverlay` renders an SVG cat paw (semi-realistic, cute, 5-claw) that lerps toward the pointer, rotates to face it, and performs a claw-swipe pulse on fast pointer motion or after ~2.5s idle with cursor on screen.
+- Per-swipe color randomized from a warm palette (brand orange, flame, sunshine 700, bright yellow, pink variants) that fits DESIGN.md warm spectrum.
+- `GlassOverlay` is a full-screen fixed layer (`z-index: 1`) with `backdrop-filter: blur(26px) saturate(1.25)` that blurs the paw painted below it, leaving page content sharp.
+- Added `.glass-overlay` utility in `globals.css` with light/dark tinted variants.
+- Root layout wraps content in `relative z-10` wrapper so Navbar/main/Footer stay above the glass.
+- Gated by `(pointer: fine)` and `prefers-reduced-motion: no-preference` — overlay is inert on touch-only devices and users who opt out of motion.
+
+Validation:
+
+- Lint / build not run in this worktree (node_modules not installed here). User to run `pnpm install && pnpm lint && pnpm build` before commit.
+- Manual smoke test recommended: landing page pointer tracking, dashboard readability, lineage page contrast.
+
 ### 2026-04-12 - Documentation Structure For Multi-Agent Work
 
 - `AGENTS.md` expanded into the single source of truth for all coding-agent rules.
