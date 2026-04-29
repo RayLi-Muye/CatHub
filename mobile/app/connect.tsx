@@ -134,6 +134,16 @@ export default function ConnectScreen() {
         )}
       </Pressable>
 
+      <Pressable
+        onPress={() => router.push("/scan")}
+        style={({ pressed }) => [
+          styles.tertiaryButton,
+          pressed && styles.buttonPressed,
+        ]}
+      >
+        <Text style={styles.tertiaryButtonText}>Scan QR code</Text>
+      </Pressable>
+
       {lookup ? <LookupCard lookup={lookup} /> : null}
 
       {lookup ? (
@@ -322,6 +332,20 @@ const styles = StyleSheet.create({
   secondaryButtonText: {
     color: "#b45309",
     fontSize: 14,
+    fontWeight: "700",
+  },
+  tertiaryButton: {
+    alignItems: "center",
+    borderColor: "#fed7aa",
+    borderRadius: 8,
+    borderWidth: 1,
+    justifyContent: "center",
+    marginTop: 10,
+    minHeight: 48,
+  },
+  tertiaryButtonText: {
+    color: "#b45309",
+    fontSize: 15,
     fontWeight: "700",
   },
   card: {

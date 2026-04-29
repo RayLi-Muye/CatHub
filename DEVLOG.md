@@ -8,7 +8,7 @@
 
 ## Current Status
 
-CatHub is in MVP development. The web app currently supports account auth, cat profiles, avatar uploads through Vercel Blob, health records, weight logs, social timeline posts, daily check-ins, video posts, and lineage tracking. The Expo React Native mobile app now has mobile auth endpoints, login/register screens, token storage, and a dashboard cat list.
+CatHub is in MVP development. The web app currently supports account auth, cat profiles, avatar uploads through Vercel Blob, health records, weight logs, social timeline posts, daily check-ins, video posts, and lineage tracking. The Expo React Native mobile app now has mobile auth endpoints, login/register screens, token storage, dashboard cat list, manual identity-code connect, and QR-code scanning for lineage connection requests.
 
 The lineage system now supports:
 
@@ -20,6 +20,23 @@ The lineage system now supports:
 ---
 
 ## Recent Changes
+
+### 2026-04-30 - Mobile QR Scan For Identity Codes
+
+- Added `expo-camera` (`~55.0.16`) to the mobile workspace and configured the camera permission via the `expo-camera` config plugin in `mobile/app.json`.
+- Added `mobile/app/scan.tsx`: a `CameraView` QR scanner that accepts either the `cathub://connect?code=...` deep link or a raw `CAT-XXXX-XXXX-XXXX` payload, validates with `identityCodeSchema` from `@cathub/shared`, and forwards to `/connect` with the parsed code.
+- Permission flow handles unprompted, can-ask-again, and denied states with a manual-entry fallback.
+- Added a "Scan QR" tertiary button on `mobile/app/connect.tsx` and a Scan QR / Enter code action row on `mobile/app/dashboard.tsx`.
+- The full lineage connection request flow is now: scan QR → /connect prefilled → cat lookup → choose own cat + sire/dam → submit.
+
+Validation:
+
+- `pnpm --filter @cathub/shared typecheck`
+- `pnpm --filter @cathub/mobile typecheck`
+- `pnpm --filter @cathub/mobile exec expo install --check`
+- `pnpm lint`
+- `pnpm build`
+- Camera and on-device scanning not yet exercised; an iOS dev build is required (Xcode currently not available on this machine).
 
 ### 2026-04-30 - Local API Server + Identity QR
 
@@ -148,9 +165,11 @@ Validation:
 
 Recommended next feature slice:
 
-1. Add native QR camera scanning on top of the manual mobile connect flow.
-2. Run authenticated mobile smoke tests with a real `DATABASE_URL` and Next.js server on port 3000.
-3. Add mobile token refresh/revocation or session table before production use.
+1. Mobile cat detail / health / timeline read-only screens, fed by new `/api/mobile/cats/[id]` endpoints.
+2. Mobile timeline post creation with `expo-image-picker` + Vercel Blob direct upload via signed URLs from a new `/api/mobile/blob/sign` endpoint.
+3. Daily check-in form on mobile.
+4. Mobile token refresh/revocation or session table before production use.
+5. iOS dev build via EAS once Xcode is available, to exercise the camera scanner end-to-end.
 
 ---
 

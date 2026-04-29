@@ -96,8 +96,10 @@ Workspace layout:
 - The mobile app has login, registration, session restore, sign-out, and dashboard cat-list screens.
 - Mobile auth uses explicit `/api/mobile/*` JSON endpoints with Bearer tokens instead of Auth.js browser cookies.
 - Tokens are stored with `expo-secure-store` on native and `localStorage` on web previews.
-- Mobile connect supports manual identity-code lookup and external lineage request creation; QR camera scanning is not wired yet.
+- Mobile connect supports manual identity-code lookup and external lineage request creation.
 - Mobile connect can prefill an identity code from `cathub://connect?code=...` deep links.
+- Mobile QR scanning is wired via `expo-camera` at `mobile/app/scan.tsx`; scans accept the `cathub://connect?code=...` deep link or a raw `CAT-XXXX-XXXX-XXXX` payload, validate via `identityCodeSchema`, and forward to `/connect`.
+- Camera permission is configured through the `expo-camera` config plugin in `mobile/app.json`.
 
 ---
 
@@ -171,7 +173,7 @@ Lineage-specific enums:
 - Lineage page: `src/app/[username]/[catname]/lineage/page.tsx`
 - Dashboard: `src/app/(main)/dashboard/page.tsx`
 - Mobile app entry: `mobile/app/_layout.tsx`, `mobile/app/index.tsx`
-- Mobile screens: `mobile/app/login.tsx`, `mobile/app/register.tsx`, `mobile/app/dashboard.tsx`, `mobile/app/connect.tsx`
+- Mobile screens: `mobile/app/login.tsx`, `mobile/app/register.tsx`, `mobile/app/dashboard.tsx`, `mobile/app/connect.tsx`, `mobile/app/scan.tsx`
 - Mobile API client: `mobile/src/lib/api.ts`
 - Mobile token store: `mobile/src/lib/token-store.ts`
 - Mobile auth helpers: `src/lib/mobile-auth.ts`

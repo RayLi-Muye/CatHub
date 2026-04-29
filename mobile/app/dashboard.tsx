@@ -81,15 +81,28 @@ export default function DashboardScreen() {
         </Pressable>
       </View>
 
-      <Pressable
-        onPress={() => router.push("/connect")}
-        style={({ pressed }) => [
-          styles.primaryButton,
-          pressed && styles.buttonPressed,
-        ]}
-      >
-        <Text style={styles.primaryButtonText}>Connect identity code</Text>
-      </Pressable>
+      <View style={styles.actionRow}>
+        <Pressable
+          onPress={() => router.push("/scan")}
+          style={({ pressed }) => [
+            styles.primaryButton,
+            styles.actionFlex,
+            pressed && styles.buttonPressed,
+          ]}
+        >
+          <Text style={styles.primaryButtonText}>Scan QR</Text>
+        </Pressable>
+        <Pressable
+          onPress={() => router.push("/connect")}
+          style={({ pressed }) => [
+            styles.tertiaryButton,
+            styles.actionFlex,
+            pressed && styles.buttonPressed,
+          ]}
+        >
+          <Text style={styles.tertiaryButtonText}>Enter code</Text>
+        </Pressable>
+      </View>
 
       <FlatList
         contentContainerStyle={styles.listContent}
@@ -189,6 +202,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "700",
   },
+  actionRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginBottom: 18,
+  },
+  actionFlex: {
+    flex: 1,
+    marginBottom: 0,
+  },
   primaryButton: {
     alignItems: "center",
     backgroundColor: "#b45309",
@@ -202,6 +224,19 @@ const styles = StyleSheet.create({
   },
   primaryButtonText: {
     color: "#ffffff",
+    fontSize: 15,
+    fontWeight: "700",
+  },
+  tertiaryButton: {
+    alignItems: "center",
+    borderColor: "#fed7aa",
+    borderRadius: 8,
+    borderWidth: 1,
+    justifyContent: "center",
+    minHeight: 48,
+  },
+  tertiaryButtonText: {
+    color: "#b45309",
     fontSize: 15,
     fontWeight: "700",
   },
