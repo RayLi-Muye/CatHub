@@ -6,9 +6,9 @@ This file is the quick context package for humans and coding agents. For rules, 
 
 ## Product
 
-CatHub is an AI cat digital-twin platform. The MVP focuses on cat identity, health tracking, social timeline, and breeder-oriented lineage tracking.
+CatHub is an AI cat digital-twin platform. The MVP focuses on cat identity, health tracking, social timeline, breeder-oriented lineage tracking, and a native mobile companion.
 
-Current priority: complete the breeder lineage workflow step by step, verifying each feature slice before starting the next one.
+Current priority: build the mobile app foundation as a thin React Native client over explicit mobile APIs, while keeping the existing Next.js web app stable.
 
 ---
 
@@ -16,6 +16,7 @@ Current priority: complete the breeder lineage workflow step by step, verifying 
 
 - Next.js 16 App Router
 - React 19
+- Expo SDK 55 / React Native 0.83 mobile scaffold
 - TypeScript
 - Tailwind CSS v4
 - shadcn/base-nova style components
@@ -24,9 +25,15 @@ Current priority: complete the breeder lineage workflow step by step, verifying 
 - Auth.js v5 credentials auth
 - Vercel Blob for uploads
 - Vercel dev for local environment simulation
-- pnpm
+- pnpm workspaces
 
 Important: this repo uses Next.js 16. Read relevant docs in `node_modules/next/dist/docs/` before editing Next.js code.
+
+Workspace layout:
+
+- Root project remains the existing Next.js web app for now.
+- `mobile/` contains the Expo React Native app.
+- `packages/shared/` contains cross-platform constants, types, and schemas intended for both web/API/mobile use.
 
 ---
 
@@ -73,6 +80,7 @@ Important: this repo uses Next.js 16. Read relevant docs in `node_modules/next/d
 - `cat_lineage_edges` models parent -> child relationships as a directed acyclic graph.
 - Internal lineage: owner can link sire/dam from cats they own.
 - External lineage: owner can request a parent link using another owner's identity code.
+- Owner identity codes render as both text and QR; QR payload opens `cathub://connect?code=...`.
 - External links require responder confirmation before a confirmed edge is created.
 - Accepted external links are stored as `sourceType = external`.
 - Existing conflicting same-role confirmed parent can be marked `disputed` when a new external claim is accepted.
@@ -80,6 +88,16 @@ Important: this repo uses Next.js 16. Read relevant docs in `node_modules/next/d
 - Ancestor and descendant views are recursive.
 - UI display depth is user-selectable: `3`, `4`, `5`, `6`, or `all`.
 - Logical cycle detection is not capped by the UI display depth.
+
+### Mobile
+
+- `mobile/` is initialized as an Expo SDK 55 TypeScript app.
+- Expo Router is configured with typed routes and the `cathub://` deep-link scheme.
+- The mobile app has login, registration, session restore, sign-out, and dashboard cat-list screens.
+- Mobile auth uses explicit `/api/mobile/*` JSON endpoints with Bearer tokens instead of Auth.js browser cookies.
+- Tokens are stored with `expo-secure-store` on native and `localStorage` on web previews.
+- Mobile connect supports manual identity-code lookup and external lineage request creation; QR camera scanning is not wired yet.
+- Mobile connect can prefill an identity code from `cathub://connect?code=...` deep links.
 
 ---
 
@@ -100,6 +118,11 @@ Important: this repo uses Next.js 16. Read relevant docs in `node_modules/next/d
 | `/{username}/{catname}/health/new` | Owner only | Add health record |
 | `/{username}/{catname}/lineage` | Public/private | Lineage graph, identity code, internal/external lineage tools |
 | `/{username}/{catname}/timeline` | Public/private | Timeline and daily check-ins |
+| `/api/mobile/auth/login` | Public | Mobile login JSON endpoint |
+| `/api/mobile/auth/register` | Public | Mobile registration JSON endpoint |
+| `/api/mobile/auth/me` | Mobile token required | Current mobile user |
+| `/api/mobile/dashboard` | Mobile token required | Current user and owned cats for mobile dashboard |
+| `/api/mobile/connect/identity-code` | Mobile token required | Look up identity code and create external lineage request |
 
 ---
 
@@ -147,6 +170,13 @@ Lineage-specific enums:
 - External request actions: `src/actions/lineage-connections.ts`
 - Lineage page: `src/app/[username]/[catname]/lineage/page.tsx`
 - Dashboard: `src/app/(main)/dashboard/page.tsx`
+- Mobile app entry: `mobile/app/_layout.tsx`, `mobile/app/index.tsx`
+- Mobile screens: `mobile/app/login.tsx`, `mobile/app/register.tsx`, `mobile/app/dashboard.tsx`, `mobile/app/connect.tsx`
+- Mobile API client: `mobile/src/lib/api.ts`
+- Mobile token store: `mobile/src/lib/token-store.ts`
+- Mobile auth helpers: `src/lib/mobile-auth.ts`
+- Shared package: `packages/shared/src/index.ts`
+- Workspace config: `pnpm-workspace.yaml`
 
 ---
 
@@ -163,6 +193,12 @@ Useful commands:
 ```powershell
 pnpm lint
 pnpm build
+pnpm mobile
+pnpm mobile:ios
+pnpm mobile:ios:run
+pnpm mobile:android
+pnpm mobile:web
+pnpm shared:typecheck
 pnpm db:generate
 pnpm db:push
 ```
@@ -173,6 +209,11 @@ Notes:
 - The active development database is Neon.
 - `pnpm db:migrate` may not work against the current dev database because earlier schema sync used `db:push` before Drizzle migration history was populated.
 - Use `pnpm db:push` only when intentionally syncing the active development DB.
+- If pnpm is not installed globally, `npx pnpm@10.33.2 <command>` works with the pinned package manager version.
+- Expo dependency compatibility can be checked with `pnpm --filter @cathub/mobile exec expo install --check`.
+- Mobile API calls default to `http://localhost:3000`; run the Next.js app on port 3000 while testing authenticated mobile screens.
+- For a physical phone, set `EXPO_PUBLIC_API_BASE_URL=http://<computer-lan-ip>:3000` and run Next.js on a reachable host.
+- iOS Simulator requires full Xcode, not only Command Line Tools. After installing Xcode, run `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer`, open Xcode once, install an iOS runtime in Xcode Settings > Platforms, then verify with `xcrun simctl list devices available`.
 
 ---
 
@@ -182,6 +223,8 @@ Before committing code changes:
 
 - Run `pnpm lint`.
 - Run `pnpm build`.
+- Run `pnpm --filter @cathub/shared typecheck` when editing shared code.
+- Run `pnpm --filter @cathub/mobile typecheck` and `pnpm --filter @cathub/mobile exec expo install --check` when editing mobile code.
 - For schema changes, run `pnpm db:generate`.
 - For DB behavior, use transaction-based smoke tests and roll back temporary data.
 - For runtime behavior, prefer `vercel dev` smoke tests.
@@ -216,11 +259,16 @@ Done:
 - Internal lineage graph
 - Owner identity codes
 - External identity-code lineage requests
+- Expo React Native mobile scaffold
+- Shared workspace package scaffold
+- Mobile auth API and login/register screens
+- Mobile dashboard cat list API and screen
+- Mobile manual identity-code connect API and screen
+- QR code display for owner identity codes
 
 Next:
 
-- QR code generation for identity codes
-- `/connect` scan/manual entry route
+- QR scan entry using the existing mobile manual connect flow
 - Better lineage request UX after accept/decline/cancel
 - Breeding Branch / Litter planning
 - Doctor summary and breeder pedigree export templates
@@ -231,8 +279,9 @@ Next:
 
 ## Known Gaps
 
-- QR codes are not implemented yet.
-- `/connect` scan/manual entry page does not exist yet.
+- Mobile manual identity-code entry exists; web `/connect` and native QR scanner are not implemented yet.
+- Mobile auth is token-based but does not yet support refresh tokens, server-side revocation, or device/session management.
+- Mobile app has no media upload or QR scanner yet.
 - External request action buttons were not fully browser-click tested with hydrated UI; server actions and page data visibility were tested.
 - Privacy is currently coarse. Fine-grained field visibility is planned but not implemented.
 - Export templates are not implemented.

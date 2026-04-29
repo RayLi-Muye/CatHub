@@ -8,7 +8,7 @@
 
 ## Current Status
 
-CatHub is in MVP development. The app currently supports account auth, cat profiles, avatar uploads through Vercel Blob, health records, weight logs, social timeline posts, daily check-ins, video posts, and lineage tracking.
+CatHub is in MVP development. The web app currently supports account auth, cat profiles, avatar uploads through Vercel Blob, health records, weight logs, social timeline posts, daily check-ins, video posts, and lineage tracking. The Expo React Native mobile app now has mobile auth endpoints, login/register screens, token storage, and a dashboard cat list.
 
 The lineage system now supports:
 
@@ -20,6 +20,67 @@ The lineage system now supports:
 ---
 
 ## Recent Changes
+
+### 2026-04-30 - Local API Server + Identity QR
+
+- Started the local Next.js API server on `localhost:3000` in a detached `screen` session named `cathub-api`.
+- Verified `/api/mobile/auth/me` returns `401 Not authenticated`, confirming the mobile API layer is reachable without touching the database.
+- Added QR rendering to the owner-only identity code card using `qrcode`.
+- QR payload opens `cathub://connect?code=...`; mobile `/connect` now pre-fills the code from that deep-link query.
+
+Validation:
+
+- `pnpm --filter @cathub/mobile typecheck`
+- `pnpm --filter @cathub/shared typecheck`
+- `pnpm lint`
+- `pnpm build`
+
+### 2026-04-29 - Mobile Manual Identity Connect
+
+- Added `/api/mobile/connect/identity-code` for authenticated identity-code lookup and external lineage request creation.
+- Added `mobile/app/connect.tsx` with manual identity-code search, parent preview, own-cat selection, sire/dam selection, optional note, and request submission.
+- Added a Dashboard entry point for mobile identity-code connection.
+- Extended shared mobile API types for identity-code lookup and lineage request responses.
+
+Validation:
+
+- `pnpm --filter @cathub/shared typecheck`
+- `pnpm --filter @cathub/mobile typecheck`
+- `pnpm --filter @cathub/mobile exec expo install --check`
+- `pnpm lint`
+- `pnpm build`
+
+### 2026-04-29 - Mobile Auth + Dashboard Slice
+
+- Added mobile JSON APIs: `/api/mobile/auth/login`, `/api/mobile/auth/register`, `/api/mobile/auth/me`, and `/api/mobile/dashboard`.
+- Added `src/lib/mobile-auth.ts` with signed mobile Bearer tokens; mobile auth is intentionally separate from Auth.js browser cookies.
+- Added mobile login, registration, session restore, sign-out, and dashboard cat-list screens.
+- Added `expo-secure-store` for native token storage, with `localStorage` fallback for Expo Web previews.
+- Added `pnpm mobile:ios:run` for local iOS simulator development builds once full Xcode is installed.
+- Confirmed this machine currently points at Command Line Tools only, so `xcodebuild` and `xcrun simctl` are unavailable until full Xcode is installed and selected.
+
+Validation:
+
+- `pnpm --filter @cathub/shared typecheck`
+- `pnpm --filter @cathub/mobile typecheck`
+- `pnpm --filter @cathub/mobile exec expo install --check`
+- `pnpm lint`
+- `pnpm build`
+
+### 2026-04-29 - Mobile Workspace Scaffold
+
+- Added `pnpm-workspace.yaml` with `mobile/` and `packages/*` workspaces while leaving the current Next.js web app at the repository root.
+- Added `mobile/` as an Expo SDK 55 TypeScript app using Expo Router, typed routes, and the `cathub://` scheme.
+- Added `packages/shared/` with shared app constants, lineage role/sex types, identity-code validation, and an `ApiResult<T>` response shape.
+- Added root mobile scripts: `pnpm mobile`, `pnpm mobile:ios`, `pnpm mobile:android`, and `pnpm mobile:web`.
+
+Validation:
+
+- `pnpm --filter @cathub/shared typecheck`
+- `pnpm --filter @cathub/mobile typecheck`
+- `pnpm --filter @cathub/mobile exec expo install --check`
+- `pnpm lint`
+- `pnpm build`
 
 ### 2026-04-17 - Global Frosted Glass + Cat Paw Cursor
 
@@ -81,30 +142,15 @@ Validation:
 - `pnpm build`
 - Database uniqueness checks and Vercel dev public privacy smoke test.
 
-### 2026-04-12 - Internal Lineage Graph
-
-- Added `cat_lineage_edges` DAG model for parent -> child relationships.
-- Added internal sire/dam linking for cats owned by the same user.
-- Added recursive ancestor and descendant display.
-- Added display-depth selector with `?generations=3|4|5|6|all`.
-
-Validation:
-
-- `pnpm db:generate`
-- `pnpm db:push`
-- `pnpm lint`
-- `pnpm build`
-- Recursive query and constraint transaction tests.
-
 ---
 
 ## Next Step
 
 Recommended next feature slice:
 
-1. Generate QR codes for existing owner identity codes.
-2. Add a `/connect` entry page for scanned or manually entered identity codes.
-3. Reuse the existing external request / accept / decline / cancel flow.
+1. Add native QR camera scanning on top of the manual mobile connect flow.
+2. Run authenticated mobile smoke tests with a real `DATABASE_URL` and Next.js server on port 3000.
+3. Add mobile token refresh/revocation or session table before production use.
 
 ---
 

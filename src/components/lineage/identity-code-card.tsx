@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
+import QRCode from "qrcode";
+import { useActionState, useEffect, useMemo, useState } from "react";
 import type { IdentityCodeActionState } from "@/actions/identity-code";
 
 type IdentityCode = {
@@ -20,6 +21,37 @@ export function IdentityCodeCard({
   ) => Promise<IdentityCodeActionState>;
 }) {
   const [state, formAction, pending] = useActionState(generateAction, {});
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const connectUrl = useMemo(() => {
+    if (!identityCode) return null;
+    return `cathub://connect?code=${encodeURIComponent(identityCode.code)}`;
+  }, [identityCode]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    if (!connectUrl) return;
+
+    QRCode.toDataURL(connectUrl, {
+      errorCorrectionLevel: "M",
+      margin: 2,
+      scale: 6,
+      color: {
+        dark: "#1f2937",
+        light: "#ffffff",
+      },
+    })
+      .then((dataUrl) => {
+        if (isMounted) setQrDataUrl(dataUrl);
+      })
+      .catch(() => {
+        if (isMounted) setQrDataUrl(null);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [connectUrl]);
 
   return (
     <section className="mb-8 border border-border bg-card p-5 shadow-golden">
@@ -30,19 +62,38 @@ export function IdentityCodeCard({
           </p>
           <h2 className="text-2xl">Share-only identity code</h2>
           <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-            This code is only visible to the owner. Later it will be used for QR
-            based external lineage requests with owner confirmation.
+            This code is only visible to the owner. Share it as text or QR so
+            another owner can request an external lineage link.
           </p>
         </div>
 
         {identityCode ? (
-          <div className="bg-background px-5 py-4 text-right">
-            <p className="font-mono text-xl tracking-[2px]">
-              {identityCode.code}
-            </p>
-            <p className="mt-1 text-xs uppercase tracking-wider text-muted-foreground">
-              {identityCode.visibility} - issued {identityCode.createdAtLabel}
-            </p>
+          <div className="flex flex-col items-start gap-4 bg-background px-5 py-4 md:flex-row md:items-center">
+            <div className="flex h-36 w-36 items-center justify-center border border-border bg-white p-2">
+              {qrDataUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={qrDataUrl}
+                  alt={`QR code for ${identityCode.code}`}
+                  className="h-full w-full"
+                />
+              ) : (
+                <span className="text-xs text-muted-foreground">
+                  Generating QR...
+                </span>
+              )}
+            </div>
+            <div className="text-left md:text-right">
+              <p className="font-mono text-xl tracking-[2px]">
+                {identityCode.code}
+              </p>
+              <p className="mt-1 text-xs uppercase tracking-wider text-muted-foreground">
+                {identityCode.visibility} - issued {identityCode.createdAtLabel}
+              </p>
+              <p className="mt-2 max-w-72 text-xs text-muted-foreground">
+                QR opens the mobile connect flow and pre-fills this code.
+              </p>
+            </div>
           </div>
         ) : (
           <form action={formAction}>
