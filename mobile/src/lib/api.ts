@@ -5,6 +5,7 @@ import type {
   MobileDashboardPayload,
   MobileIdentityCodeLookupPayload,
   MobileLineageRequestPayload,
+  MobileTimelineCreatePayload,
   MobileUser,
 } from "@cathub/shared";
 import { Platform } from "react-native";
@@ -24,7 +25,11 @@ async function request<T>(
   const headers = new Headers(init.headers);
   headers.set("Accept", "application/json");
 
-  if (init.body && !headers.has("Content-Type")) {
+  // Only auto-set Content-Type for non-FormData JSON bodies. FormData must
+  // let fetch generate its own multipart/form-data boundary header.
+  const isFormData =
+    typeof FormData !== "undefined" && init.body instanceof FormData;
+  if (init.body && !isFormData && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
 
@@ -89,6 +94,42 @@ export async function getDashboard() {
 export async function getCatDetail(catId: string) {
   return request<MobileCatDetailPayload>(
     `/api/mobile/cats/${encodeURIComponent(catId)}`
+  );
+}
+
+export type MobileTimelineImageInput = {
+  uri: string;
+  mimeType: string;
+  fileName: string;
+};
+
+export async function createTimelinePost(
+  catId: string,
+  input: {
+    content: string;
+    image?: MobileTimelineImageInput | null;
+    isHealthAlert?: boolean;
+    tags?: string[];
+  }
+): Promise<ApiResult<MobileTimelineCreatePayload>> {
+  const form = new FormData();
+  form.append("content", input.content);
+  if (input.isHealthAlert) form.append("isHealthAlert", "true");
+  if (input.tags && input.tags.length > 0) {
+    form.append("tags", input.tags.join(","));
+  }
+  if (input.image) {
+    // React Native FormData accepts { uri, name, type } file objects.
+    form.append("image", {
+      uri: input.image.uri,
+      name: input.image.fileName,
+      type: input.image.mimeType,
+    } as unknown as Blob);
+  }
+
+  return request<MobileTimelineCreatePayload>(
+    `/api/mobile/cats/${encodeURIComponent(catId)}/timeline`,
+    { method: "POST", body: form as unknown as BodyInit }
   );
 }
 

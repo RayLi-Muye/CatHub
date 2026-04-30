@@ -140,6 +140,19 @@ export type MobileCatCheckin = {
   notes: string | null;
 };
 
+export const MOBILE_TIMELINE_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
+export const MOBILE_TIMELINE_IMAGE_MIME_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+] as const;
+export const MOBILE_TIMELINE_CONTENT_MAX = 1000;
+
+export type MobileTimelineCreatePayload = {
+  post: MobileCatTimelinePost;
+};
+
 export type MobileCatDetailPayload = {
   cat: MobileCat & {
     colorMarkings: string | null;

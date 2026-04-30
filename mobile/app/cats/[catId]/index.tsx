@@ -16,7 +16,7 @@ import {
   Text,
   View,
 } from "react-native";
-import { getCatDetail } from "../../src/lib/api";
+import { getCatDetail } from "../../../src/lib/api";
 
 function formatDate(value: string) {
   const date = new Date(value);
@@ -186,6 +186,19 @@ export default function CatDetailScreen() {
       <Section
         title="Timeline"
         empty={recentTimeline.length === 0 ? "No posts yet." : null}
+        action={
+          cat.isOwner ? (
+            <Pressable
+              onPress={() => router.push(`/cats/${cat.id}/post-new`)}
+              style={({ pressed }) => [
+                styles.sectionAction,
+                pressed && styles.buttonPressed,
+              ]}
+            >
+              <Text style={styles.sectionActionText}>New post</Text>
+            </Pressable>
+          ) : null
+        }
       >
         {recentTimeline.map((post) => (
           <TimelineRow key={post.id} post={post} />
@@ -198,15 +211,20 @@ export default function CatDetailScreen() {
 function Section({
   title,
   empty,
+  action,
   children,
 }: {
   title: string;
   empty?: string | null;
+  action?: React.ReactNode;
   children?: React.ReactNode;
 }) {
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>{title}</Text>
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>{title}</Text>
+        {action ?? null}
+      </View>
       {empty ? <Text style={styles.sectionEmpty}>{empty}</Text> : children}
     </View>
   );
@@ -387,11 +405,30 @@ const styles = StyleSheet.create({
   section: {
     marginTop: 22,
   },
+  sectionHeader: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
   sectionTitle: {
     color: "#1f2937",
     fontSize: 18,
     fontWeight: "800",
-    marginBottom: 8,
+  },
+  sectionAction: {
+    backgroundColor: "#b45309",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  sectionActionText: {
+    color: "#ffffff",
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  buttonPressed: {
+    opacity: 0.76,
   },
   sectionEmpty: {
     backgroundColor: "#ffffff",

@@ -8,7 +8,7 @@
 
 ## Current Status
 
-CatHub is in MVP development. The web app currently supports account auth, cat profiles, avatar uploads through Vercel Blob, health records, weight logs, social timeline posts, daily check-ins, video posts, and lineage tracking. The Expo React Native mobile app now has mobile auth endpoints, login/register screens, token storage, dashboard cat list, read-only cat detail screen with timeline/health/weight/check-in summary, manual identity-code connect, and QR-code scanning for lineage connection requests.
+CatHub is in MVP development. The web app currently supports account auth, cat profiles, avatar uploads through Vercel Blob, health records, weight logs, social timeline posts, daily check-ins, video posts, and lineage tracking. The Expo React Native mobile app now has mobile auth endpoints, login/register screens, token storage, dashboard cat list, read-only cat detail screen with timeline/health/weight/check-in summary, owner-only timeline post creation with image upload, manual identity-code connect, and QR-code scanning for lineage connection requests.
 
 The lineage system now supports:
 
@@ -20,6 +20,26 @@ The lineage system now supports:
 ---
 
 ## Recent Changes
+
+### 2026-04-30 - Mobile Timeline Post Creation
+
+- Added `POST /api/mobile/cats/[catId]/timeline` accepting multipart/form-data with `content`, optional `image` (JPEG/PNG/WEBP/GIF, 5 MB cap), optional `isHealthAlert`, and optional comma-delimited `tags`. Owner-only.
+- Server uploads any attached image to Vercel Blob via `put()`, then inserts the timeline post and returns the created row as `MobileTimelineCreatePayload`.
+- Added `expo-image-picker` (`~55.0.19`) to the mobile workspace and configured the photos permission via the `expo-image-picker` config plugin in `mobile/app.json`.
+- Added `MOBILE_TIMELINE_*` constants and `MobileTimelineCreatePayload` to `@cathub/shared`.
+- Updated the mobile API client `request()` helper to leave Content-Type unset when the body is FormData (so fetch generates the multipart boundary).
+- Added `createTimelinePost` and `MobileTimelineImageInput` in `mobile/src/lib/api.ts`.
+- Restructured `mobile/app/cats/[catId].tsx` into `mobile/app/cats/[catId]/index.tsx` and added `mobile/app/cats/[catId]/post-new.tsx` with content textarea, image picker preview, health-alert toggle, and submit flow that returns to the detail screen on success.
+- Detail screen now exposes an owner-only "New post" action button on the Timeline section.
+
+Validation:
+
+- `pnpm --filter @cathub/shared typecheck`
+- `pnpm --filter @cathub/mobile typecheck`
+- `pnpm --filter @cathub/mobile exec expo install --check`
+- `pnpm lint`
+- `pnpm build` (route appears as `/api/mobile/cats/[catId]/timeline`)
+- End-to-end image upload not exercised here; needs a logged-in mobile session and a real `BLOB_READ_WRITE_TOKEN` in the API server environment.
 
 ### 2026-04-30 - Mobile Cat Detail Screen
 
@@ -182,11 +202,12 @@ Validation:
 
 Recommended next feature slice:
 
-1. Mobile timeline post creation with `expo-image-picker` + Vercel Blob direct upload via signed URLs from a new `/api/mobile/blob/sign` endpoint.
-2. Mobile daily check-in form (`POST /api/mobile/cats/[catId]/checkins`).
+1. Mobile daily check-in form (`POST /api/mobile/cats/[catId]/checkins`) with appetite/energy/bowel/mood/notes.
+2. Mobile health record entry (`POST /api/mobile/cats/[catId]/health`) and weight log entry (`POST /api/mobile/cats/[catId]/weights`).
 3. Paginated mobile feed lists (full timeline / full health / full weight chart) past the detail summary cap.
-4. Mobile token refresh/revocation or session table before production use.
-5. iOS dev build via EAS once Xcode is available, to exercise the camera scanner end-to-end.
+4. Switch mobile image upload to Vercel Blob client direct upload via a signed-URL endpoint to bypass the route-handler body size limit and lift the 5 MB cap toward video support.
+5. Mobile token refresh/revocation or session table before production use.
+6. iOS dev build via EAS once Xcode is available, to exercise the camera scanner and image picker end-to-end.
 
 ---
 

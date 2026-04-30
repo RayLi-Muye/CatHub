@@ -15,6 +15,12 @@
         {
           "cameraPermission": "CatHub uses the camera to scan identity-code QR codes for lineage connections."
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "CatHub uses your photo library to attach images to cat timeline posts."
+        }
       ]
     ],
     "experiments": {
