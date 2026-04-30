@@ -8,7 +8,7 @@
 
 ## Current Status
 
-CatHub is in MVP development. The web app currently supports account auth, cat profiles, avatar uploads through Vercel Blob, health records, weight logs, social timeline posts, daily check-ins, video posts, and lineage tracking. The Expo React Native mobile app now has mobile auth endpoints, login/register screens, token storage, dashboard cat list, read-only cat detail screen with timeline/health/weight/check-in summary, owner-only timeline post creation with image upload, manual identity-code connect, and QR-code scanning for lineage connection requests.
+CatHub is in MVP development. The web app currently supports account auth, cat profiles, avatar uploads through Vercel Blob, health records, weight logs, social timeline posts, daily check-ins, video posts, and lineage tracking. The Expo React Native mobile app now has mobile auth endpoints, login/register screens, token storage, dashboard cat list, read-only cat detail screen with timeline/health/weight/check-in summary, owner-only timeline post creation with image upload, owner-only daily check-in entry, manual identity-code connect, and QR-code scanning for lineage connection requests.
 
 The lineage system now supports:
 
@@ -20,6 +20,22 @@ The lineage system now supports:
 ---
 
 ## Recent Changes
+
+### 2026-04-30 - Mobile Daily Check-in Entry
+
+- Added `POST /api/mobile/cats/[catId]/checkins` accepting JSON `{ date, appetiteScore (1-5), energyScore (1-5), bowelStatus, moodEmoji?, notes? }`. Owner-only. Same-day duplicates return 409.
+- Added `bowelStatusValues`, `BowelStatus` type, `dailyCheckin*` constants, and `MobileCheckinCreatePayload` to `@cathub/shared`.
+- Added `createDailyCheckin` in the mobile API client.
+- Added `mobile/app/cats/[catId]/checkin-new.tsx` with date input (defaults to today), 1-5 appetite/energy tick selectors, bowel status options, emoji preset row plus custom emoji entry, and notes textarea.
+- Detail screen now shows an owner-only "New check-in" action on the Latest check-in section, including when no prior check-in exists.
+
+Validation:
+
+- `pnpm --filter @cathub/shared typecheck`
+- `pnpm --filter @cathub/mobile typecheck`
+- `pnpm lint`
+- `pnpm build` (route appears as `/api/mobile/cats/[catId]/checkins`)
+- End-to-end check-in submission not exercised here; needs a logged-in mobile session against a real `DATABASE_URL`.
 
 ### 2026-04-30 - Mobile Timeline Post Creation
 
@@ -202,12 +218,11 @@ Validation:
 
 Recommended next feature slice:
 
-1. Mobile daily check-in form (`POST /api/mobile/cats/[catId]/checkins`) with appetite/energy/bowel/mood/notes.
-2. Mobile health record entry (`POST /api/mobile/cats/[catId]/health`) and weight log entry (`POST /api/mobile/cats/[catId]/weights`).
-3. Paginated mobile feed lists (full timeline / full health / full weight chart) past the detail summary cap.
-4. Switch mobile image upload to Vercel Blob client direct upload via a signed-URL endpoint to bypass the route-handler body size limit and lift the 5 MB cap toward video support.
-5. Mobile token refresh/revocation or session table before production use.
-6. iOS dev build via EAS once Xcode is available, to exercise the camera scanner and image picker end-to-end.
+1. Mobile health record entry (`POST /api/mobile/cats/[catId]/health`) and weight log entry (`POST /api/mobile/cats/[catId]/weights`).
+2. Paginated mobile feed lists (full timeline / full health / full weight chart) past the detail summary cap.
+3. Switch mobile image upload to Vercel Blob client direct upload via a signed-URL endpoint to bypass the route-handler body size limit and lift the 5 MB cap toward video support.
+4. Mobile token refresh/revocation or session table before production use.
+5. iOS dev build via EAS once Xcode is available, to exercise the camera scanner, image picker, and check-in form end-to-end.
 
 ---
 

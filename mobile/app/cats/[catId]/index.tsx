@@ -159,9 +159,23 @@ export default function CatDetailScreen() {
         </View>
       </View>
 
-      {latestCheckin ? (
-        <Section title="Latest check-in">
-          <CheckinRow checkin={latestCheckin} />
+      {cat.isOwner ? (
+        <Section
+          title="Latest check-in"
+          empty={latestCheckin ? null : "No check-in yet."}
+          action={
+            <Pressable
+              onPress={() => router.push(`/cats/${cat.id}/checkin-new`)}
+              style={({ pressed }) => [
+                styles.sectionAction,
+                pressed && styles.buttonPressed,
+              ]}
+            >
+              <Text style={styles.sectionActionText}>New check-in</Text>
+            </Pressable>
+          }
+        >
+          {latestCheckin ? <CheckinRow checkin={latestCheckin} /> : null}
         </Section>
       ) : null}
 

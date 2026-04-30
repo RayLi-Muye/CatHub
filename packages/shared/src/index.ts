@@ -140,6 +140,26 @@ export type MobileCatCheckin = {
   notes: string | null;
 };
 
+export const bowelStatusValues = [
+  "normal",
+  "soft",
+  "hard",
+  "diarrhea",
+  "constipation",
+  "none",
+] as const;
+
+export type BowelStatus = (typeof bowelStatusValues)[number];
+
+export const dailyCheckinScoreMin = 1;
+export const dailyCheckinScoreMax = 5;
+export const dailyCheckinNotesMax = 500;
+export const dailyCheckinMoodMax = 10;
+
+export type MobileCheckinCreatePayload = {
+  checkin: MobileCatCheckin;
+};
+
 export const MOBILE_TIMELINE_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 export const MOBILE_TIMELINE_IMAGE_MIME_TYPES = [
   "image/jpeg",

@@ -1,7 +1,9 @@
 import type {
   ApiResult,
+  BowelStatus,
   MobileAuthPayload,
   MobileCatDetailPayload,
+  MobileCheckinCreatePayload,
   MobileDashboardPayload,
   MobileIdentityCodeLookupPayload,
   MobileLineageRequestPayload,
@@ -130,6 +132,23 @@ export async function createTimelinePost(
   return request<MobileTimelineCreatePayload>(
     `/api/mobile/cats/${encodeURIComponent(catId)}/timeline`,
     { method: "POST", body: form as unknown as BodyInit }
+  );
+}
+
+export async function createDailyCheckin(
+  catId: string,
+  input: {
+    date: string;
+    appetiteScore: number;
+    energyScore: number;
+    bowelStatus: BowelStatus;
+    moodEmoji?: string | null;
+    notes?: string | null;
+  }
+) {
+  return request<MobileCheckinCreatePayload>(
+    `/api/mobile/cats/${encodeURIComponent(catId)}/checkins`,
+    { method: "POST", body: JSON.stringify(input) }
   );
 }
 
