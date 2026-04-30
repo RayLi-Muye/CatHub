@@ -104,6 +104,8 @@ Workspace layout:
 - The detail endpoint allows owners on any cat and other authenticated users on public cats only.
 - Owners can create timeline posts from `mobile/app/cats/[catId]/post-new.tsx` with optional image (JPEG/PNG/WEBP/GIF, 5 MB cap) via `expo-image-picker` + `POST /api/mobile/cats/[catId]/timeline`.
 - Owners can record daily check-ins from `mobile/app/cats/[catId]/checkin-new.tsx` (date, appetite/energy 1-5, bowel status, mood emoji, notes) via `POST /api/mobile/cats/[catId]/checkins`. Same-day duplicates rejected with 409.
+- Owners can add health records from `mobile/app/cats/[catId]/health-new.tsx` (type, title, date, vet name, vet clinic, description) via `POST /api/mobile/cats/[catId]/health`.
+- Owners can log weights from `mobile/app/cats/[catId]/weight-new.tsx` (weightKg, recordedAt, notes) via `POST /api/mobile/cats/[catId]/weights`. Weight bounded to 0-50 kg with up to 2 decimals.
 - The timeline POST endpoint accepts multipart/form-data (`content`, optional `image` file, optional `isHealthAlert`, optional `tags`), uploads images to Vercel Blob server-side, and inserts the post.
 - Photo library permission is configured through the `expo-image-picker` config plugin in `mobile/app.json`.
 
@@ -133,6 +135,8 @@ Workspace layout:
 | `/api/mobile/cats/[catId]` | Mobile token required | Cat detail summary (cat, recent timeline, recent health, recent weights, latest check-in) |
 | `/api/mobile/cats/[catId]/timeline` (POST) | Mobile token required, owner only | Create a timeline post with optional image upload |
 | `/api/mobile/cats/[catId]/checkins` (POST) | Mobile token required, owner only | Create a daily check-in (one per day per cat) |
+| `/api/mobile/cats/[catId]/health` (POST) | Mobile token required, owner only | Create a health record |
+| `/api/mobile/cats/[catId]/weights` (POST) | Mobile token required, owner only | Create a weight log |
 | `/api/mobile/connect/identity-code` | Mobile token required | Look up identity code and create external lineage request |
 
 ---
@@ -182,7 +186,7 @@ Lineage-specific enums:
 - Lineage page: `src/app/[username]/[catname]/lineage/page.tsx`
 - Dashboard: `src/app/(main)/dashboard/page.tsx`
 - Mobile app entry: `mobile/app/_layout.tsx`, `mobile/app/index.tsx`
-- Mobile screens: `mobile/app/login.tsx`, `mobile/app/register.tsx`, `mobile/app/dashboard.tsx`, `mobile/app/connect.tsx`, `mobile/app/scan.tsx`, `mobile/app/cats/[catId]/index.tsx`, `mobile/app/cats/[catId]/post-new.tsx`, `mobile/app/cats/[catId]/checkin-new.tsx`
+- Mobile screens: `mobile/app/login.tsx`, `mobile/app/register.tsx`, `mobile/app/dashboard.tsx`, `mobile/app/connect.tsx`, `mobile/app/scan.tsx`, `mobile/app/cats/[catId]/index.tsx`, `mobile/app/cats/[catId]/post-new.tsx`, `mobile/app/cats/[catId]/checkin-new.tsx`, `mobile/app/cats/[catId]/health-new.tsx`, `mobile/app/cats/[catId]/weight-new.tsx`
 - Mobile API client: `mobile/src/lib/api.ts`
 - Mobile token store: `mobile/src/lib/token-store.ts`
 - Mobile auth helpers: `src/lib/mobile-auth.ts`

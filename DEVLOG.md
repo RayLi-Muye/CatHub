@@ -8,7 +8,7 @@
 
 ## Current Status
 
-CatHub is in MVP development. The web app currently supports account auth, cat profiles, avatar uploads through Vercel Blob, health records, weight logs, social timeline posts, daily check-ins, video posts, and lineage tracking. The Expo React Native mobile app now has mobile auth endpoints, login/register screens, token storage, dashboard cat list, read-only cat detail screen with timeline/health/weight/check-in summary, owner-only timeline post creation with image upload, owner-only daily check-in entry, manual identity-code connect, and QR-code scanning for lineage connection requests.
+CatHub is in MVP development. The web app currently supports account auth, cat profiles, avatar uploads through Vercel Blob, health records, weight logs, social timeline posts, daily check-ins, video posts, and lineage tracking. The Expo React Native mobile app now has mobile auth endpoints, login/register screens, token storage, dashboard cat list, read-only cat detail screen with timeline/health/weight/check-in summary, owner-only timeline post creation with image upload, owner-only daily check-in entry, owner-only health record entry, owner-only weight log entry, manual identity-code connect, and QR-code scanning for lineage connection requests.
 
 The lineage system now supports:
 
@@ -20,6 +20,23 @@ The lineage system now supports:
 ---
 
 ## Recent Changes
+
+### 2026-04-30 - Mobile Health Record + Weight Log Entry
+
+- Added `POST /api/mobile/cats/[catId]/health` accepting JSON `{ type, title, date, description?, vetName?, vetClinic? }`. Owner-only.
+- Added `POST /api/mobile/cats/[catId]/weights` accepting JSON `{ weightKg, recordedAt, notes? }`. Owner-only. `weightKg` validated as a positive number (≤ 50 kg) with up to 2 decimals.
+- Added `healthRecordTypeValues`, `HealthRecordType`, `weightLog*` constants, `MobileHealthCreatePayload`, and `MobileWeightCreatePayload` to `@cathub/shared`.
+- Added `createHealthRecord` and `createWeightLog` in the mobile API client.
+- Added `mobile/app/cats/[catId]/health-new.tsx` (type chip grid, title, date, vet name/clinic, description) and `mobile/app/cats/[catId]/weight-new.tsx` (decimal-pad weight input, date, notes).
+- Detail screen Health and Weight sections now show owner-only "New record" / "Log weight" actions, including when no prior entries exist.
+
+Validation:
+
+- `pnpm --filter @cathub/shared typecheck`
+- `pnpm --filter @cathub/mobile typecheck`
+- `pnpm lint`
+- `pnpm build` (routes appear as `/api/mobile/cats/[catId]/health` and `/api/mobile/cats/[catId]/weights`)
+- End-to-end submission not exercised here; needs a logged-in mobile session against a real `DATABASE_URL`.
 
 ### 2026-04-30 - Mobile Daily Check-in Entry
 
@@ -218,11 +235,12 @@ Validation:
 
 Recommended next feature slice:
 
-1. Mobile health record entry (`POST /api/mobile/cats/[catId]/health`) and weight log entry (`POST /api/mobile/cats/[catId]/weights`).
-2. Paginated mobile feed lists (full timeline / full health / full weight chart) past the detail summary cap.
+1. Paginated mobile feed lists (full timeline / full health / full weight chart) past the detail summary cap.
+2. Mobile cat profile editing (rename, breed, sex, color markings, public/private toggle).
 3. Switch mobile image upload to Vercel Blob client direct upload via a signed-URL endpoint to bypass the route-handler body size limit and lift the 5 MB cap toward video support.
-4. Mobile token refresh/revocation or session table before production use.
-5. iOS dev build via EAS once Xcode is available, to exercise the camera scanner, image picker, and check-in form end-to-end.
+4. Mobile lineage view + accept/decline of incoming external lineage requests.
+5. Mobile token refresh/revocation or session table before production use.
+6. iOS dev build via EAS once Xcode is available, to exercise scanner / image picker / forms end-to-end.
 
 ---
 

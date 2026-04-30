@@ -140,6 +140,33 @@ export type MobileCatCheckin = {
   notes: string | null;
 };
 
+export const healthRecordTypeValues = [
+  "checkup",
+  "vaccination",
+  "surgery",
+  "illness",
+  "medication",
+  "other",
+] as const;
+
+export type HealthRecordType = (typeof healthRecordTypeValues)[number];
+
+export const healthRecordTitleMax = 200;
+export const healthRecordDescriptionMax = 5000;
+export const healthRecordVetNameMax = 100;
+export const healthRecordVetClinicMax = 200;
+
+export const weightLogNotesMax = 500;
+export const weightLogMaxKg = 50;
+
+export type MobileHealthCreatePayload = {
+  record: MobileCatHealthRecord;
+};
+
+export type MobileWeightCreatePayload = {
+  weight: MobileCatWeightLog;
+};
+
 export const bowelStatusValues = [
   "normal",
   "soft",

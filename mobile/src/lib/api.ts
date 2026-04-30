@@ -1,14 +1,17 @@
 import type {
   ApiResult,
   BowelStatus,
+  HealthRecordType,
   MobileAuthPayload,
   MobileCatDetailPayload,
   MobileCheckinCreatePayload,
   MobileDashboardPayload,
+  MobileHealthCreatePayload,
   MobileIdentityCodeLookupPayload,
   MobileLineageRequestPayload,
   MobileTimelineCreatePayload,
   MobileUser,
+  MobileWeightCreatePayload,
 } from "@cathub/shared";
 import { Platform } from "react-native";
 import { getAccessToken, setAccessToken } from "./token-store";
@@ -132,6 +135,33 @@ export async function createTimelinePost(
   return request<MobileTimelineCreatePayload>(
     `/api/mobile/cats/${encodeURIComponent(catId)}/timeline`,
     { method: "POST", body: form as unknown as BodyInit }
+  );
+}
+
+export async function createHealthRecord(
+  catId: string,
+  input: {
+    type: HealthRecordType;
+    title: string;
+    description?: string | null;
+    date: string;
+    vetName?: string | null;
+    vetClinic?: string | null;
+  }
+) {
+  return request<MobileHealthCreatePayload>(
+    `/api/mobile/cats/${encodeURIComponent(catId)}/health`,
+    { method: "POST", body: JSON.stringify(input) }
+  );
+}
+
+export async function createWeightLog(
+  catId: string,
+  input: { weightKg: string; recordedAt: string; notes?: string | null }
+) {
+  return request<MobileWeightCreatePayload>(
+    `/api/mobile/cats/${encodeURIComponent(catId)}/weights`,
+    { method: "POST", body: JSON.stringify(input) }
   );
 }
 

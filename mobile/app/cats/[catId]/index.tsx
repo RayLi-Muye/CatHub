@@ -182,6 +182,19 @@ export default function CatDetailScreen() {
       <Section
         title="Weight"
         empty={recentWeights.length === 0 ? "No weight logs yet." : null}
+        action={
+          cat.isOwner ? (
+            <Pressable
+              onPress={() => router.push(`/cats/${cat.id}/weight-new`)}
+              style={({ pressed }) => [
+                styles.sectionAction,
+                pressed && styles.buttonPressed,
+              ]}
+            >
+              <Text style={styles.sectionActionText}>Log weight</Text>
+            </Pressable>
+          ) : null
+        }
       >
         {recentWeights.slice(0, 5).map((log) => (
           <WeightRow key={log.id} log={log} />
@@ -191,6 +204,19 @@ export default function CatDetailScreen() {
       <Section
         title="Health"
         empty={recentHealth.length === 0 ? "No health records yet." : null}
+        action={
+          cat.isOwner ? (
+            <Pressable
+              onPress={() => router.push(`/cats/${cat.id}/health-new`)}
+              style={({ pressed }) => [
+                styles.sectionAction,
+                pressed && styles.buttonPressed,
+              ]}
+            >
+              <Text style={styles.sectionActionText}>New record</Text>
+            </Pressable>
+          ) : null
+        }
       >
         {recentHealth.map((record) => (
           <HealthRow key={record.id} record={record} />
