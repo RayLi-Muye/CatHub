@@ -116,15 +116,23 @@ export default function DashboardScreen() {
             </Text>
           </View>
         }
-        renderItem={({ item }) => <CatRow cat={item} />}
+        renderItem={({ item }) => (
+          <CatRow
+            cat={item}
+            onPress={() => router.push(`/cats/${item.id}`)}
+          />
+        )}
       />
     </View>
   );
 }
 
-function CatRow({ cat }: { cat: MobileCat }) {
+function CatRow({ cat, onPress }: { cat: MobileCat; onPress: () => void }) {
   return (
-    <View style={styles.catRow}>
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [styles.catRow, pressed && styles.buttonPressed]}
+    >
       <View style={styles.avatar}>
         {cat.avatarUrl ? (
           <Image
@@ -147,7 +155,7 @@ function CatRow({ cat }: { cat: MobileCat }) {
           </Text>
         ) : null}
       </View>
-    </View>
+    </Pressable>
   );
 }
 

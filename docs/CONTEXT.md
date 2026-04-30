@@ -100,6 +100,8 @@ Workspace layout:
 - Mobile connect can prefill an identity code from `cathub://connect?code=...` deep links.
 - Mobile QR scanning is wired via `expo-camera` at `mobile/app/scan.tsx`; scans accept the `cathub://connect?code=...` deep link or a raw `CAT-XXXX-XXXX-XXXX` payload, validate via `identityCodeSchema`, and forward to `/connect`.
 - Camera permission is configured through the `expo-camera` config plugin in `mobile/app.json`.
+- Mobile cat detail screen at `mobile/app/cats/[catId].tsx` shows hero, latest check-in (owner only), recent weights (last 5), recent health records (last 5), and recent timeline posts (last 10), via `GET /api/mobile/cats/[catId]`.
+- The detail endpoint allows owners on any cat and other authenticated users on public cats only.
 
 ---
 
@@ -124,6 +126,7 @@ Workspace layout:
 | `/api/mobile/auth/register` | Public | Mobile registration JSON endpoint |
 | `/api/mobile/auth/me` | Mobile token required | Current mobile user |
 | `/api/mobile/dashboard` | Mobile token required | Current user and owned cats for mobile dashboard |
+| `/api/mobile/cats/[catId]` | Mobile token required | Cat detail summary (cat, recent timeline, recent health, recent weights, latest check-in) |
 | `/api/mobile/connect/identity-code` | Mobile token required | Look up identity code and create external lineage request |
 
 ---
@@ -173,7 +176,7 @@ Lineage-specific enums:
 - Lineage page: `src/app/[username]/[catname]/lineage/page.tsx`
 - Dashboard: `src/app/(main)/dashboard/page.tsx`
 - Mobile app entry: `mobile/app/_layout.tsx`, `mobile/app/index.tsx`
-- Mobile screens: `mobile/app/login.tsx`, `mobile/app/register.tsx`, `mobile/app/dashboard.tsx`, `mobile/app/connect.tsx`, `mobile/app/scan.tsx`
+- Mobile screens: `mobile/app/login.tsx`, `mobile/app/register.tsx`, `mobile/app/dashboard.tsx`, `mobile/app/connect.tsx`, `mobile/app/scan.tsx`, `mobile/app/cats/[catId].tsx`
 - Mobile API client: `mobile/src/lib/api.ts`
 - Mobile token store: `mobile/src/lib/token-store.ts`
 - Mobile auth helpers: `src/lib/mobile-auth.ts`

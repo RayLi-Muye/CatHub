@@ -8,7 +8,7 @@
 
 ## Current Status
 
-CatHub is in MVP development. The web app currently supports account auth, cat profiles, avatar uploads through Vercel Blob, health records, weight logs, social timeline posts, daily check-ins, video posts, and lineage tracking. The Expo React Native mobile app now has mobile auth endpoints, login/register screens, token storage, dashboard cat list, manual identity-code connect, and QR-code scanning for lineage connection requests.
+CatHub is in MVP development. The web app currently supports account auth, cat profiles, avatar uploads through Vercel Blob, health records, weight logs, social timeline posts, daily check-ins, video posts, and lineage tracking. The Expo React Native mobile app now has mobile auth endpoints, login/register screens, token storage, dashboard cat list, read-only cat detail screen with timeline/health/weight/check-in summary, manual identity-code connect, and QR-code scanning for lineage connection requests.
 
 The lineage system now supports:
 
@@ -20,6 +20,23 @@ The lineage system now supports:
 ---
 
 ## Recent Changes
+
+### 2026-04-30 - Mobile Cat Detail Screen
+
+- Added `GET /api/mobile/cats/[catId]` returning cat record, owner brief, last 10 timeline posts, last 5 health records, last 30 weight logs, and the latest daily check-in (owner only).
+- Access rule: owners see any of their cats; other authenticated users only see cats with `isPublic = true`.
+- Added `MobileCatDetailPayload` and supporting row types (`MobileCatTimelinePost`, `MobileCatHealthRecord`, `MobileCatWeightLog`, `MobileCatCheckin`) to `@cathub/shared`.
+- Added `getCatDetail(catId)` in the mobile API client.
+- Added `mobile/app/cats/[catId].tsx`: hero (avatar, owner, neutered/public flags, description), latest check-in card (owner only), recent weights, recent health, recent timeline posts.
+- Dashboard cat rows are now `Pressable` and route to `/cats/{id}`.
+
+Validation:
+
+- `pnpm --filter @cathub/shared typecheck`
+- `pnpm --filter @cathub/mobile typecheck`
+- `pnpm lint`
+- `pnpm build`
+- The new route shows up as `/api/mobile/cats/[catId]` in the Next.js build output.
 
 ### 2026-04-30 - Mobile QR Scan For Identity Codes
 
@@ -165,9 +182,9 @@ Validation:
 
 Recommended next feature slice:
 
-1. Mobile cat detail / health / timeline read-only screens, fed by new `/api/mobile/cats/[id]` endpoints.
-2. Mobile timeline post creation with `expo-image-picker` + Vercel Blob direct upload via signed URLs from a new `/api/mobile/blob/sign` endpoint.
-3. Daily check-in form on mobile.
+1. Mobile timeline post creation with `expo-image-picker` + Vercel Blob direct upload via signed URLs from a new `/api/mobile/blob/sign` endpoint.
+2. Mobile daily check-in form (`POST /api/mobile/cats/[catId]/checkins`).
+3. Paginated mobile feed lists (full timeline / full health / full weight chart) past the detail summary cap.
 4. Mobile token refresh/revocation or session table before production use.
 5. iOS dev build via EAS once Xcode is available, to exercise the camera scanner end-to-end.
 

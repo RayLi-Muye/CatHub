@@ -1,6 +1,7 @@
 import type {
   ApiResult,
   MobileAuthPayload,
+  MobileCatDetailPayload,
   MobileDashboardPayload,
   MobileIdentityCodeLookupPayload,
   MobileLineageRequestPayload,
@@ -83,6 +84,12 @@ export async function getMe() {
 
 export async function getDashboard() {
   return request<MobileDashboardPayload>("/api/mobile/dashboard");
+}
+
+export async function getCatDetail(catId: string) {
+  return request<MobileCatDetailPayload>(
+    `/api/mobile/cats/${encodeURIComponent(catId)}`
+  );
 }
 
 export async function lookupIdentityCode(identityCode: string) {

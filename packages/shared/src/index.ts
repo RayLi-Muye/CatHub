@@ -91,3 +91,68 @@ export type MobileLineageRequestPayload = {
   status: "pending" | "already_pending" | "already_confirmed";
   message: string;
 };
+
+export type MobileCatTimelinePost = {
+  id: string;
+  content: string;
+  imageUrl: string | null;
+  videoUrl: string | null;
+  mediaType: "none" | "image" | "video" | null;
+  isHealthAlert: boolean | null;
+  createdAt: string;
+};
+
+export type MobileCatHealthRecord = {
+  id: string;
+  type:
+    | "checkup"
+    | "vaccination"
+    | "surgery"
+    | "illness"
+    | "medication"
+    | "other";
+  title: string;
+  description: string | null;
+  date: string;
+  vetName: string | null;
+};
+
+export type MobileCatWeightLog = {
+  id: string;
+  weightKg: string;
+  recordedAt: string;
+  notes: string | null;
+};
+
+export type MobileCatCheckin = {
+  id: string;
+  date: string;
+  appetiteScore: number;
+  energyScore: number;
+  bowelStatus:
+    | "normal"
+    | "soft"
+    | "hard"
+    | "diarrhea"
+    | "constipation"
+    | "none";
+  moodEmoji: string | null;
+  notes: string | null;
+};
+
+export type MobileCatDetailPayload = {
+  cat: MobileCat & {
+    colorMarkings: string | null;
+    isNeutered: boolean | null;
+    owner: {
+      username: string;
+      displayName: string | null;
+      avatarUrl: string | null;
+    };
+    isOwner: boolean;
+  };
+  recentTimeline: MobileCatTimelinePost[];
+  recentHealth: MobileCatHealthRecord[];
+  recentWeights: MobileCatWeightLog[];
+  latestCheckin: MobileCatCheckin | null;
+};
