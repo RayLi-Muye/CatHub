@@ -8,7 +8,7 @@
 
 ## Current Status
 
-CatHub is in MVP development. The app currently supports account auth, cat profiles, avatar uploads through Vercel Blob, health records, weight logs, social timeline posts, daily check-ins, video posts, and lineage tracking.
+CatHub is in MVP development. The web app currently supports account auth, cat profiles, avatar uploads through Vercel Blob, health records, weight logs, social timeline posts, daily check-ins, video posts, and lineage tracking. The Expo React Native mobile app now has mobile auth endpoints, login/register screens, token storage, dashboard cat list with create/refresh-on-focus, cat creation, cat profile editing, cat detail screen with timeline/health/weight/check-in summary plus paginated full-list screens, owner-only timeline post creation with image upload, owner-only daily check-in / health / weight entry forms, lineage inbox with accept/decline/cancel, manual identity-code connect, and QR-code scanning for lineage connection requests.
 
 The lineage system now supports:
 
@@ -20,6 +20,222 @@ The lineage system now supports:
 ---
 
 ## Recent Changes
+
+### 2026-05-02 - Mobile Cat Creation
+
+- Added `POST /api/mobile/cats` accepting JSON `{ name, breed?, sex?, birthdate?, description?, colorMarkings?, microchipId?, isNeutered?, isPublic? }`. Authenticated user becomes the owner. Slug is generated via the same `slugify` from `transliteration` as the web action; same-owner slug collisions get a timestamp suffix.
+- Added `MobileCatCreateInput` and `MobileCatCreatePayload` to `@cathub/shared`.
+- Added `createCat` in the mobile API client.
+- Added `mobile/app/cats/new.tsx` mirroring the edit form (name, breed, sex chips, birthdate, color, microchip, description, neutered + public toggles); on success replaces to the new cat detail screen.
+- Dashboard now shows an "Add cat" button alongside "Lineage inbox" and refreshes the cat list on focus (so newly created cats appear immediately when the user navigates back).
+
+Validation:
+
+- `pnpm --filter @cathub/shared typecheck`
+- `pnpm --filter @cathub/mobile typecheck`
+- `pnpm lint`
+- `pnpm build` (route appears as `/api/mobile/cats`)
+
+### 2026-05-02 - Mobile Paginated Feed Lists
+
+- Added `GET /api/mobile/cats/[catId]/timeline?offset=&limit=` returning timeline posts with a `nextOffset` cursor (default page size 20, max 50). Public cats accessible to any auth user; private cats owner-only.
+- Added `GET /api/mobile/cats/[catId]/health?offset=&limit=` with the same pagination shape.
+- Added `GET /api/mobile/cats/[catId]/weights` returning up to the 200 most recent weight logs (no pagination — chart needs full series).
+- Added `MobileTimelineListPayload`, `MobileHealthListPayload`, `MobileWeightListPayload`, and `MOBILE_LIST_PAGE_SIZE` to `@cathub/shared`.
+- Added `getCatTimeline`, `getCatHealth`, and `getCatWeights` in the mobile API client.
+- Added `mobile/app/cats/[catId]/timeline.tsx` and `mobile/app/cats/[catId]/health.tsx` with "Load more" pagination.
+- Added `mobile/app/cats/[catId]/weights.tsx` with a latest/min/max summary card and per-row bars that scale to the cat's observed weight range.
+- The cat detail Timeline / Health / Weight sections now show a "View all →" link below populated content that routes to the corresponding list screen.
+
+Validation:
+
+- `pnpm --filter @cathub/shared typecheck`
+- `pnpm --filter @cathub/mobile typecheck`
+- `pnpm lint`
+- `pnpm build`
+- End-to-end pagination not exercised against a real DB here.
+
+### 2026-05-02 - Mobile Cat Profile Editing
+
+- Added `PATCH /api/mobile/cats/[catId]` accepting JSON with optional fields name, breed, sex, birthdate, description, colorMarkings, microchipId, isNeutered, isPublic. Owner-only; partial updates allowed.
+- Renaming a cat re-runs the same `slugify` from `transliteration` used by the web action; same-owner slug collisions get a `${slug}-${timestamp}` suffix.
+- Added `MobileCatUpdateInput`, `MobileCatUpdatePayload`, and `cat*Max` constants to `@cathub/shared`.
+- Added `updateCat` in the mobile API client.
+- Added `mobile/app/cats/[catId]/edit.tsx` with name/breed/birthdate/color/microchip/description text inputs, sex chip grid, neutered + public toggles, prefilled from `getCatDetail`. Non-owner access is rejected at load time.
+- Detail screen top bar now shows an owner-only "Edit" button next to "Back".
+
+Validation:
+
+- `pnpm --filter @cathub/shared typecheck`
+- `pnpm --filter @cathub/mobile typecheck`
+- `pnpm lint`
+- `pnpm build`
+- End-to-end PATCH not exercised here; needs a logged-in mobile session against a real `DATABASE_URL`.
+
+### 2026-05-02 - Mobile Lineage Inbox (Accept / Decline / Cancel)
+
+- Added `GET /api/mobile/lineage/requests` returning pending incoming and outgoing lineage connection requests for the authenticated user, reusing the existing `getLineageConnectionInbox` query helper.
+- Added `PATCH /api/mobile/lineage/requests/[requestId]` accepting `{ action: "accept" | "decline" | "cancel", responseNote? }`. Responder-only for accept/decline; requester-only for cancel. Accept replays the web action's full edge-creation logic: role/sex validation, cycle check, same-pair-other-role detection, and disputed-takeover when an existing same-role parent conflicts.
+- Added `MobileLineageRequestSummary`, `MobileLineageInboxPayload`, `MobileLineageRespondAction`, and `MobileLineageRespondPayload` to `@cathub/shared`, plus `lineageResponseNoteMax`.
+- Added `getLineageInbox` and `respondLineageRequest` in the mobile API client. Hardened the `request()` helper Content-Type check against undefined bodies.
+- Added `mobile/app/inbox.tsx` with incoming/outgoing tabs, per-card accept/decline (incoming) or cancel (outgoing) actions, success/error banners, and post-action refresh.
+- Dashboard now shows a "Lineage inbox" entry below the connect actions.
+
+Validation:
+
+- `pnpm --filter @cathub/shared typecheck`
+- `pnpm --filter @cathub/mobile typecheck`
+- `pnpm lint`
+- `pnpm build` (routes appear as `/api/mobile/lineage/requests` and `/api/mobile/lineage/requests/[requestId]`)
+- End-to-end accept/decline/cancel not exercised here; needs a logged-in mobile session against a real `DATABASE_URL`.
+
+### 2026-04-30 - Mobile Health Record + Weight Log Entry
+
+- Added `POST /api/mobile/cats/[catId]/health` accepting JSON `{ type, title, date, description?, vetName?, vetClinic? }`. Owner-only.
+- Added `POST /api/mobile/cats/[catId]/weights` accepting JSON `{ weightKg, recordedAt, notes? }`. Owner-only. `weightKg` validated as a positive number (≤ 50 kg) with up to 2 decimals.
+- Added `healthRecordTypeValues`, `HealthRecordType`, `weightLog*` constants, `MobileHealthCreatePayload`, and `MobileWeightCreatePayload` to `@cathub/shared`.
+- Added `createHealthRecord` and `createWeightLog` in the mobile API client.
+- Added `mobile/app/cats/[catId]/health-new.tsx` (type chip grid, title, date, vet name/clinic, description) and `mobile/app/cats/[catId]/weight-new.tsx` (decimal-pad weight input, date, notes).
+- Detail screen Health and Weight sections now show owner-only "New record" / "Log weight" actions, including when no prior entries exist.
+
+Validation:
+
+- `pnpm --filter @cathub/shared typecheck`
+- `pnpm --filter @cathub/mobile typecheck`
+- `pnpm lint`
+- `pnpm build` (routes appear as `/api/mobile/cats/[catId]/health` and `/api/mobile/cats/[catId]/weights`)
+- End-to-end submission not exercised here; needs a logged-in mobile session against a real `DATABASE_URL`.
+
+### 2026-04-30 - Mobile Daily Check-in Entry
+
+- Added `POST /api/mobile/cats/[catId]/checkins` accepting JSON `{ date, appetiteScore (1-5), energyScore (1-5), bowelStatus, moodEmoji?, notes? }`. Owner-only. Same-day duplicates return 409.
+- Added `bowelStatusValues`, `BowelStatus` type, `dailyCheckin*` constants, and `MobileCheckinCreatePayload` to `@cathub/shared`.
+- Added `createDailyCheckin` in the mobile API client.
+- Added `mobile/app/cats/[catId]/checkin-new.tsx` with date input (defaults to today), 1-5 appetite/energy tick selectors, bowel status options, emoji preset row plus custom emoji entry, and notes textarea.
+- Detail screen now shows an owner-only "New check-in" action on the Latest check-in section, including when no prior check-in exists.
+
+Validation:
+
+- `pnpm --filter @cathub/shared typecheck`
+- `pnpm --filter @cathub/mobile typecheck`
+- `pnpm lint`
+- `pnpm build` (route appears as `/api/mobile/cats/[catId]/checkins`)
+- End-to-end check-in submission not exercised here; needs a logged-in mobile session against a real `DATABASE_URL`.
+
+### 2026-04-30 - Mobile Timeline Post Creation
+
+- Added `POST /api/mobile/cats/[catId]/timeline` accepting multipart/form-data with `content`, optional `image` (JPEG/PNG/WEBP/GIF, 5 MB cap), optional `isHealthAlert`, and optional comma-delimited `tags`. Owner-only.
+- Server uploads any attached image to Vercel Blob via `put()`, then inserts the timeline post and returns the created row as `MobileTimelineCreatePayload`.
+- Added `expo-image-picker` (`~55.0.19`) to the mobile workspace and configured the photos permission via the `expo-image-picker` config plugin in `mobile/app.json`.
+- Added `MOBILE_TIMELINE_*` constants and `MobileTimelineCreatePayload` to `@cathub/shared`.
+- Updated the mobile API client `request()` helper to leave Content-Type unset when the body is FormData (so fetch generates the multipart boundary).
+- Added `createTimelinePost` and `MobileTimelineImageInput` in `mobile/src/lib/api.ts`.
+- Restructured `mobile/app/cats/[catId].tsx` into `mobile/app/cats/[catId]/index.tsx` and added `mobile/app/cats/[catId]/post-new.tsx` with content textarea, image picker preview, health-alert toggle, and submit flow that returns to the detail screen on success.
+- Detail screen now exposes an owner-only "New post" action button on the Timeline section.
+
+Validation:
+
+- `pnpm --filter @cathub/shared typecheck`
+- `pnpm --filter @cathub/mobile typecheck`
+- `pnpm --filter @cathub/mobile exec expo install --check`
+- `pnpm lint`
+- `pnpm build` (route appears as `/api/mobile/cats/[catId]/timeline`)
+- End-to-end image upload not exercised here; needs a logged-in mobile session and a real `BLOB_READ_WRITE_TOKEN` in the API server environment.
+
+### 2026-04-30 - Mobile Cat Detail Screen
+
+- Added `GET /api/mobile/cats/[catId]` returning cat record, owner brief, last 10 timeline posts, last 5 health records, last 30 weight logs, and the latest daily check-in (owner only).
+- Access rule: owners see any of their cats; other authenticated users only see cats with `isPublic = true`.
+- Added `MobileCatDetailPayload` and supporting row types (`MobileCatTimelinePost`, `MobileCatHealthRecord`, `MobileCatWeightLog`, `MobileCatCheckin`) to `@cathub/shared`.
+- Added `getCatDetail(catId)` in the mobile API client.
+- Added `mobile/app/cats/[catId].tsx`: hero (avatar, owner, neutered/public flags, description), latest check-in card (owner only), recent weights, recent health, recent timeline posts.
+- Dashboard cat rows are now `Pressable` and route to `/cats/{id}`.
+
+Validation:
+
+- `pnpm --filter @cathub/shared typecheck`
+- `pnpm --filter @cathub/mobile typecheck`
+- `pnpm lint`
+- `pnpm build`
+- The new route shows up as `/api/mobile/cats/[catId]` in the Next.js build output.
+
+### 2026-04-30 - Mobile QR Scan For Identity Codes
+
+- Added `expo-camera` (`~55.0.16`) to the mobile workspace and configured the camera permission via the `expo-camera` config plugin in `mobile/app.json`.
+- Added `mobile/app/scan.tsx`: a `CameraView` QR scanner that accepts either the `cathub://connect?code=...` deep link or a raw `CAT-XXXX-XXXX-XXXX` payload, validates with `identityCodeSchema` from `@cathub/shared`, and forwards to `/connect` with the parsed code.
+- Permission flow handles unprompted, can-ask-again, and denied states with a manual-entry fallback.
+- Added a "Scan QR" tertiary button on `mobile/app/connect.tsx` and a Scan QR / Enter code action row on `mobile/app/dashboard.tsx`.
+- The full lineage connection request flow is now: scan QR → /connect prefilled → cat lookup → choose own cat + sire/dam → submit.
+
+Validation:
+
+- `pnpm --filter @cathub/shared typecheck`
+- `pnpm --filter @cathub/mobile typecheck`
+- `pnpm --filter @cathub/mobile exec expo install --check`
+- `pnpm lint`
+- `pnpm build`
+- Camera and on-device scanning not yet exercised; an iOS dev build is required (Xcode currently not available on this machine).
+
+### 2026-04-30 - Local API Server + Identity QR
+
+- Started the local Next.js API server on `localhost:3000` in a detached `screen` session named `cathub-api`.
+- Verified `/api/mobile/auth/me` returns `401 Not authenticated`, confirming the mobile API layer is reachable without touching the database.
+- Added QR rendering to the owner-only identity code card using `qrcode`.
+- QR payload opens `cathub://connect?code=...`; mobile `/connect` now pre-fills the code from that deep-link query.
+
+Validation:
+
+- `pnpm --filter @cathub/mobile typecheck`
+- `pnpm --filter @cathub/shared typecheck`
+- `pnpm lint`
+- `pnpm build`
+
+### 2026-04-29 - Mobile Manual Identity Connect
+
+- Added `/api/mobile/connect/identity-code` for authenticated identity-code lookup and external lineage request creation.
+- Added `mobile/app/connect.tsx` with manual identity-code search, parent preview, own-cat selection, sire/dam selection, optional note, and request submission.
+- Added a Dashboard entry point for mobile identity-code connection.
+- Extended shared mobile API types for identity-code lookup and lineage request responses.
+
+Validation:
+
+- `pnpm --filter @cathub/shared typecheck`
+- `pnpm --filter @cathub/mobile typecheck`
+- `pnpm --filter @cathub/mobile exec expo install --check`
+- `pnpm lint`
+- `pnpm build`
+
+### 2026-04-29 - Mobile Auth + Dashboard Slice
+
+- Added mobile JSON APIs: `/api/mobile/auth/login`, `/api/mobile/auth/register`, `/api/mobile/auth/me`, and `/api/mobile/dashboard`.
+- Added `src/lib/mobile-auth.ts` with signed mobile Bearer tokens; mobile auth is intentionally separate from Auth.js browser cookies.
+- Added mobile login, registration, session restore, sign-out, and dashboard cat-list screens.
+- Added `expo-secure-store` for native token storage, with `localStorage` fallback for Expo Web previews.
+- Added `pnpm mobile:ios:run` for local iOS simulator development builds once full Xcode is installed.
+- Confirmed this machine currently points at Command Line Tools only, so `xcodebuild` and `xcrun simctl` are unavailable until full Xcode is installed and selected.
+
+Validation:
+
+- `pnpm --filter @cathub/shared typecheck`
+- `pnpm --filter @cathub/mobile typecheck`
+- `pnpm --filter @cathub/mobile exec expo install --check`
+- `pnpm lint`
+- `pnpm build`
+
+### 2026-04-29 - Mobile Workspace Scaffold
+
+- Added `pnpm-workspace.yaml` with `mobile/` and `packages/*` workspaces while leaving the current Next.js web app at the repository root.
+- Added `mobile/` as an Expo SDK 55 TypeScript app using Expo Router, typed routes, and the `cathub://` scheme.
+- Added `packages/shared/` with shared app constants, lineage role/sex types, identity-code validation, and an `ApiResult<T>` response shape.
+- Added root mobile scripts: `pnpm mobile`, `pnpm mobile:ios`, `pnpm mobile:android`, and `pnpm mobile:web`.
+
+Validation:
+
+- `pnpm --filter @cathub/shared typecheck`
+- `pnpm --filter @cathub/mobile typecheck`
+- `pnpm --filter @cathub/mobile exec expo install --check`
+- `pnpm lint`
+- `pnpm build`
 
 ### 2026-04-17 - Global Frosted Glass + Cat Paw Cursor
 
@@ -81,30 +297,16 @@ Validation:
 - `pnpm build`
 - Database uniqueness checks and Vercel dev public privacy smoke test.
 
-### 2026-04-12 - Internal Lineage Graph
-
-- Added `cat_lineage_edges` DAG model for parent -> child relationships.
-- Added internal sire/dam linking for cats owned by the same user.
-- Added recursive ancestor and descendant display.
-- Added display-depth selector with `?generations=3|4|5|6|all`.
-
-Validation:
-
-- `pnpm db:generate`
-- `pnpm db:push`
-- `pnpm lint`
-- `pnpm build`
-- Recursive query and constraint transaction tests.
-
 ---
 
 ## Next Step
 
 Recommended next feature slice:
 
-1. Generate QR codes for existing owner identity codes.
-2. Add a `/connect` entry page for scanned or manually entered identity codes.
-3. Reuse the existing external request / accept / decline / cancel flow.
+1. Switch mobile image upload to Vercel Blob client direct upload via a signed-URL endpoint to bypass the Vercel route-handler 4.5 MB body limit and lift the 5 MB cap toward video support.
+2. Mobile cat avatar upload (slot in once the direct-upload endpoint exists).
+3. Mobile token refresh/revocation or session table before production use.
+4. iOS dev build via EAS once Xcode is available, to exercise scanner / image picker / forms / inbox / edit / lists / create end-to-end.
 
 ---
 

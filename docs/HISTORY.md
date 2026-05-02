@@ -25,6 +25,114 @@
 
 ## 变更记录
 
+### 2026-04-30 — Local API Server + Identity QR
+
+**API runtime:**
+- 启动本地 Next.js API server：`localhost:3000`。
+- 使用 detached `screen` session `cathub-api` 运行，和 Expo 的 `cathub-expo` 分开。
+- 验证 `/api/mobile/auth/me` 返回 `401 Not authenticated`，说明移动端 API layer 可达；登录/注册仍需要真实 `DATABASE_URL` 才能查库。
+
+**Identity QR:**
+- 根 Web app 新增依赖 `qrcode` 和 `@types/qrcode`。
+- `src/components/lineage/identity-code-card.tsx` 在 owner-only identity code 上显示 QR。
+- QR payload 使用 `cathub://connect?code=CAT-...`，用于后续真机扫码直接进入移动端 connect flow。
+- `mobile/app/connect.tsx` 支持从 `code` query 参数预填 identity code。
+
+**验证结果:**
+- `pnpm --filter @cathub/mobile typecheck` 通过
+- `pnpm --filter @cathub/shared typecheck` 通过
+- `pnpm lint` 通过
+- `pnpm build` 通过
+
+### 2026-04-29 — Mobile Manual Identity Connect
+
+**API:**
+- 新增 `/api/mobile/connect/identity-code`。
+- `GET` 接收 `?code=CAT-XXXX-XXXX-XXXX`，要求移动端 Bearer token，返回对方猫的安全预览信息。
+- `POST` 接收 `childCatId`、`identityCode`、`parentRole`、`requestNote`，要求 requester 拥有 child cat，然后创建 pending external lineage request。
+- API 复用现有 lineage 约束：身份码有效性、不能连接自己的 identity code、不能自引用、sire/dam 性别校验、confirmed pair 重复检查、same-role parent 冲突检查、cycle check、pending request 去重。
+
+**Mobile app:**
+- 新增 `mobile/app/connect.tsx`。
+- Dashboard 新增 `Connect identity code` 入口。
+- Connect 页面支持手动输入 identity code、查看对方猫预览、选择自己的 child cat、选择 sire/dam、填写可选 note 并发送请求。
+- 暂不接相机扫码；后续 QR scanner 可以把扫码结果填入同一套 manual connect 流程。
+
+**共享类型:**
+- `packages/shared/src/index.ts` 新增 `MobileIdentityCodeLookupPayload` 和 `MobileLineageRequestPayload`。
+
+**验证结果:**
+- `pnpm --filter @cathub/shared typecheck` 通过
+- `pnpm --filter @cathub/mobile typecheck` 通过
+- `pnpm --filter @cathub/mobile exec expo install --check` 通过
+- `pnpm lint` 通过
+- `pnpm build` 通过
+
+### 2026-04-29 — Mobile Auth + Dashboard Slice
+
+**API:**
+- 新增 `/api/mobile/auth/login`，使用现有 credentials 用户表和 bcrypt 校验密码，返回移动端 Bearer token。
+- 新增 `/api/mobile/auth/register`，复用现有注册校验、唯一性检查和 bcrypt hash，注册成功后返回移动端 Bearer token。
+- 新增 `/api/mobile/auth/me`，基于 Bearer token 返回当前用户。
+- 新增 `/api/mobile/dashboard`，基于 Bearer token 返回当前用户和自己名下猫列表。
+- 新增 `src/lib/mobile-auth.ts`，使用 HMAC 签名的移动端 access token；生产环境应设置 `MOBILE_AUTH_SECRET`，否则 fallback 到 `AUTH_SECRET` / `NEXTAUTH_SECRET`。
+- 移动端 API 明确不复用 Auth.js browser cookie/session，避免原生 App 处理 cookie/CSRF 带来的复杂性。
+
+**Mobile app:**
+- 新增 `mobile/app/login.tsx`、`mobile/app/register.tsx`、`mobile/app/dashboard.tsx`。
+- `mobile/app/index.tsx` 现在做 session restore：token 有效进入 dashboard，无效进入 login。
+- 新增 `mobile/src/lib/api.ts` 作为移动端 API client。
+- 新增 `mobile/src/lib/token-store.ts`，native 使用 `expo-secure-store`，web preview 使用 `localStorage`。
+- `packages/shared/src/index.ts` 增加移动端 user/token/cat/dashboard 类型。
+
+**iOS simulator 状态:**
+- 当前机器 `xcode-select -p` 指向 `/Library/Developer/CommandLineTools`。
+- `xcodebuild` 报错要求完整 Xcode，`xcrun simctl` 不可用。
+- 需要安装完整 Xcode、打开一次完成组件安装、在 Settings > Platforms 安装 iOS runtime，并运行 `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer`。
+
+**验证结果:**
+- `pnpm --filter @cathub/shared typecheck` 通过
+- `pnpm --filter @cathub/mobile typecheck` 通过
+- `pnpm --filter @cathub/mobile exec expo install --check` 通过
+- `pnpm lint` 通过
+- `pnpm build` 通过
+- 备注：未做登录 API 的数据库烟测，因为当前工作树没有可用 `.env.local` / `DATABASE_URL`。
+
+### 2026-04-29 — React Native Mobile Workspace Scaffold
+
+**仓库结构:**
+- 新增 `pnpm-workspace.yaml`，将 `mobile/` 和 `packages/*` 纳入 pnpm workspace。
+- 保留现有 Next.js Web 项目在仓库根目录，暂不迁移到 `apps/web`，避免一次性打乱现有路径、部署和配置。
+- 新增 `packages/shared/`，用于后续 Web/API/Mobile 共享类型、schema 和轻量工具。
+
+**移动端:**
+- 新增 `mobile/` Expo SDK 55 TypeScript app。
+- 使用 Expo Router 作为移动端路由入口，`mobile/package.json` 的 `main` 指向 `expo-router/entry`。
+- 配置 `cathub://` deep-link scheme、typed routes、Metro web bundler。
+- 初始页面位于 `mobile/app/index.tsx`，并从 `@cathub/shared` 导入 `APP_NAME`，验证 workspace 包解析链路。
+- 依赖按 Expo SDK 55 compatibility check 固定：React 19.2.0、React Native 0.83.6、Expo 55.0.18。
+
+**共享包:**
+- 新增 `@cathub/shared`，当前包含:
+  - `APP_NAME`
+  - cat sex / lineage role literal values and types
+  - identity code Zod schema
+  - `ApiResult<T>` response envelope type
+
+**涉及文件:**
+- 新增: `pnpm-workspace.yaml`
+- 新增: `mobile/app/_layout.tsx`, `mobile/app/index.tsx`, `mobile/package.json`, `mobile/app.json`
+- 新增: `packages/shared/package.json`, `packages/shared/tsconfig.json`, `packages/shared/src/index.ts`
+- 修改: `package.json`, `pnpm-lock.yaml`, `docs/CONTEXT.md`, `DEVLOG.md`, `docs/HISTORY.md`
+
+**验证结果:**
+- `pnpm --filter @cathub/shared typecheck` 通过
+- `pnpm --filter @cathub/mobile typecheck` 通过
+- `pnpm --filter @cathub/mobile exec expo install --check` 通过
+- `pnpm lint` 通过
+- `pnpm build` 通过
+- 备注：本机 shell 没有全局 `pnpm` / `corepack`，验证使用 `npx pnpm@10.33.2 ...` 执行。
+
 ### 2026-04-12 — Profile 增强 Phase 4: External Lineage Connection Requests
 
 **数据库变更:**
