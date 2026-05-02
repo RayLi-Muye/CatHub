@@ -110,6 +110,10 @@ Workspace layout:
 - Dashboard exposes a "Lineage inbox" entry below the connect actions.
 - Owners can edit cat profiles from `mobile/app/cats/[catId]/edit.tsx` (name, breed, sex, birthdate, color, microchip, description, neutered toggle, public toggle) via `PATCH /api/mobile/cats/[catId]`. Renaming regenerates the slug; same-owner slug collisions get a timestamp suffix.
 - Detail screen exposes an owner-only "Edit" button in the top bar.
+- Detail screen sections (Timeline, Health, Weight) each link to a full-list screen via "View all →":
+  - `mobile/app/cats/[catId]/timeline.tsx` — paginated post list with "Load more"
+  - `mobile/app/cats/[catId]/health.tsx` — paginated health record list with "Load more"
+  - `mobile/app/cats/[catId]/weights.tsx` — full weight history (up to 200) with summary card (latest/min/max) and per-row bar visualizing weight relative to range
 - The timeline POST endpoint accepts multipart/form-data (`content`, optional `image` file, optional `isHealthAlert`, optional `tags`), uploads images to Vercel Blob server-side, and inserts the post.
 - Photo library permission is configured through the `expo-image-picker` config plugin in `mobile/app.json`.
 
@@ -138,9 +142,12 @@ Workspace layout:
 | `/api/mobile/dashboard` | Mobile token required | Current user and owned cats for mobile dashboard |
 | `/api/mobile/cats/[catId]` (GET) | Mobile token required | Cat detail summary (cat, recent timeline, recent health, recent weights, latest check-in) |
 | `/api/mobile/cats/[catId]` (PATCH) | Mobile token required, owner only | Edit cat profile fields (name, breed, sex, birthdate, color, microchip, neutered, public toggle); regenerates slug on rename |
+| `/api/mobile/cats/[catId]/timeline` (GET) | Mobile token required (public cat ok) | Paginated timeline posts (`offset`, `limit`, returns `nextOffset`) |
 | `/api/mobile/cats/[catId]/timeline` (POST) | Mobile token required, owner only | Create a timeline post with optional image upload |
 | `/api/mobile/cats/[catId]/checkins` (POST) | Mobile token required, owner only | Create a daily check-in (one per day per cat) |
+| `/api/mobile/cats/[catId]/health` (GET) | Mobile token required (public cat ok) | Paginated health records (`offset`, `limit`, returns `nextOffset`) |
 | `/api/mobile/cats/[catId]/health` (POST) | Mobile token required, owner only | Create a health record |
+| `/api/mobile/cats/[catId]/weights` (GET) | Mobile token required (public cat ok) | Up to 200 most recent weight logs |
 | `/api/mobile/cats/[catId]/weights` (POST) | Mobile token required, owner only | Create a weight log |
 | `/api/mobile/lineage/requests` (GET) | Mobile token required | List pending incoming and outgoing lineage connection requests |
 | `/api/mobile/lineage/requests/[requestId]` (PATCH) | Mobile token required | Accept/decline (responder) or cancel (requester) a pending request |
@@ -193,7 +200,7 @@ Lineage-specific enums:
 - Lineage page: `src/app/[username]/[catname]/lineage/page.tsx`
 - Dashboard: `src/app/(main)/dashboard/page.tsx`
 - Mobile app entry: `mobile/app/_layout.tsx`, `mobile/app/index.tsx`
-- Mobile screens: `mobile/app/login.tsx`, `mobile/app/register.tsx`, `mobile/app/dashboard.tsx`, `mobile/app/connect.tsx`, `mobile/app/scan.tsx`, `mobile/app/inbox.tsx`, `mobile/app/cats/[catId]/index.tsx`, `mobile/app/cats/[catId]/edit.tsx`, `mobile/app/cats/[catId]/post-new.tsx`, `mobile/app/cats/[catId]/checkin-new.tsx`, `mobile/app/cats/[catId]/health-new.tsx`, `mobile/app/cats/[catId]/weight-new.tsx`
+- Mobile screens: `mobile/app/login.tsx`, `mobile/app/register.tsx`, `mobile/app/dashboard.tsx`, `mobile/app/connect.tsx`, `mobile/app/scan.tsx`, `mobile/app/inbox.tsx`, `mobile/app/cats/[catId]/index.tsx`, `mobile/app/cats/[catId]/edit.tsx`, `mobile/app/cats/[catId]/post-new.tsx`, `mobile/app/cats/[catId]/checkin-new.tsx`, `mobile/app/cats/[catId]/health-new.tsx`, `mobile/app/cats/[catId]/weight-new.tsx`, `mobile/app/cats/[catId]/timeline.tsx`, `mobile/app/cats/[catId]/health.tsx`, `mobile/app/cats/[catId]/weights.tsx`
 - Mobile API client: `mobile/src/lib/api.ts`
 - Mobile token store: `mobile/src/lib/token-store.ts`
 - Mobile auth helpers: `src/lib/mobile-auth.ts`

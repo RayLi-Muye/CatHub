@@ -1,11 +1,14 @@
 import { put } from "@vercel/blob";
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
 import { z } from "zod/v4";
 import { db } from "@/lib/db";
 import { cats, timelinePosts } from "@/lib/db/schema";
 import { getMobileAuthUser } from "@/lib/mobile-auth";
+
+const PAGE_SIZE = 20;
+const MAX_PAGE_SIZE = 50;
 
 export const runtime = "nodejs";
 
@@ -148,4 +151,72 @@ export async function POST(
     },
     { status: 201 }
   );
+}
+
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ catId: string }> }
+) {
+  const user = await getMobileAuthUser(request);
+  if (!user) return apiError("Not authenticated", 401);
+
+  const parsedParams = paramsSchema.safeParse(await params);
+  if (!parsedParams.success) return apiError("Invalid cat id");
+
+  const url = new URL(request.url);
+  const offset = Math.max(0, Number.parseInt(url.searchParams.get("offset") ?? "0", 10) || 0);
+  const limit = Math.min(
+    MAX_PAGE_SIZE,
+    Math.max(
+      1,
+      Number.parseInt(url.searchParams.get("limit") ?? `${PAGE_SIZE}`, 10) ||
+        PAGE_SIZE
+    )
+  );
+
+  const [cat] = await db
+    .select({ id: cats.id, ownerId: cats.ownerId, isPublic: cats.isPublic })
+    .from(cats)
+    .where(eq(cats.id, parsedParams.data.catId))
+    .limit(1);
+
+  if (!cat) return apiError("Cat not found", 404);
+  if (cat.ownerId !== user.id && !cat.isPublic) {
+    return apiError("Cat not found", 404);
+  }
+
+  const rows = await db
+    .select({
+      id: timelinePosts.id,
+      content: timelinePosts.content,
+      imageUrl: timelinePosts.imageUrl,
+      videoUrl: timelinePosts.videoUrl,
+      mediaType: timelinePosts.mediaType,
+      isHealthAlert: timelinePosts.isHealthAlert,
+      createdAt: timelinePosts.createdAt,
+    })
+    .from(timelinePosts)
+    .where(eq(timelinePosts.catId, cat.id))
+    .orderBy(desc(timelinePosts.createdAt))
+    .offset(offset)
+    .limit(limit + 1);
+
+  const hasMore = rows.length > limit;
+  const slice = hasMore ? rows.slice(0, limit) : rows;
+
+  return NextResponse.json({
+    ok: true,
+    data: {
+      posts: slice.map((post) => ({
+        id: post.id,
+        content: post.content,
+        imageUrl: post.imageUrl,
+        videoUrl: post.videoUrl,
+        mediaType: post.mediaType,
+        isHealthAlert: post.isHealthAlert,
+        createdAt: post.createdAt.toISOString(),
+      })),
+      nextOffset: hasMore ? offset + limit : null,
+    },
+  });
 }

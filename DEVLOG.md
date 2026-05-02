@@ -8,7 +8,7 @@
 
 ## Current Status
 
-CatHub is in MVP development. The web app currently supports account auth, cat profiles, avatar uploads through Vercel Blob, health records, weight logs, social timeline posts, daily check-ins, video posts, and lineage tracking. The Expo React Native mobile app now has mobile auth endpoints, login/register screens, token storage, dashboard cat list, read-only cat detail screen with timeline/health/weight/check-in summary, owner-only timeline post creation with image upload, owner-only daily check-in entry, owner-only health record entry, owner-only weight log entry, owner-only cat profile editing, lineage inbox with accept/decline/cancel, manual identity-code connect, and QR-code scanning for lineage connection requests.
+CatHub is in MVP development. The web app currently supports account auth, cat profiles, avatar uploads through Vercel Blob, health records, weight logs, social timeline posts, daily check-ins, video posts, and lineage tracking. The Expo React Native mobile app now has mobile auth endpoints, login/register screens, token storage, dashboard cat list, cat detail screen with timeline/health/weight/check-in summary plus paginated full-list screens, owner-only timeline post creation with image upload, owner-only daily check-in / health / weight entry forms, owner-only cat profile editing, lineage inbox with accept/decline/cancel, manual identity-code connect, and QR-code scanning for lineage connection requests.
 
 The lineage system now supports:
 
@@ -20,6 +20,25 @@ The lineage system now supports:
 ---
 
 ## Recent Changes
+
+### 2026-05-02 - Mobile Paginated Feed Lists
+
+- Added `GET /api/mobile/cats/[catId]/timeline?offset=&limit=` returning timeline posts with a `nextOffset` cursor (default page size 20, max 50). Public cats accessible to any auth user; private cats owner-only.
+- Added `GET /api/mobile/cats/[catId]/health?offset=&limit=` with the same pagination shape.
+- Added `GET /api/mobile/cats/[catId]/weights` returning up to the 200 most recent weight logs (no pagination — chart needs full series).
+- Added `MobileTimelineListPayload`, `MobileHealthListPayload`, `MobileWeightListPayload`, and `MOBILE_LIST_PAGE_SIZE` to `@cathub/shared`.
+- Added `getCatTimeline`, `getCatHealth`, and `getCatWeights` in the mobile API client.
+- Added `mobile/app/cats/[catId]/timeline.tsx` and `mobile/app/cats/[catId]/health.tsx` with "Load more" pagination.
+- Added `mobile/app/cats/[catId]/weights.tsx` with a latest/min/max summary card and per-row bars that scale to the cat's observed weight range.
+- The cat detail Timeline / Health / Weight sections now show a "View all →" link below populated content that routes to the corresponding list screen.
+
+Validation:
+
+- `pnpm --filter @cathub/shared typecheck`
+- `pnpm --filter @cathub/mobile typecheck`
+- `pnpm lint`
+- `pnpm build`
+- End-to-end pagination not exercised against a real DB here.
 
 ### 2026-05-02 - Mobile Cat Profile Editing
 
@@ -269,12 +288,11 @@ Validation:
 
 Recommended next feature slice:
 
-1. Paginated mobile feed lists (full timeline / full health / full weight chart) past the detail summary cap.
-2. Switch mobile image upload to Vercel Blob client direct upload via a signed-URL endpoint to bypass the route-handler body size limit and lift the 5 MB cap toward video support.
-3. Mobile cat avatar replace (separate slice from profile editing because it needs the image picker + multipart flow).
-4. Mobile cat creation (currently only edit, not create — web is still the only place to add a cat).
-5. Mobile token refresh/revocation or session table before production use.
-6. iOS dev build via EAS once Xcode is available, to exercise scanner / image picker / forms / inbox / edit end-to-end.
+1. Switch mobile image upload to Vercel Blob client direct upload via a signed-URL endpoint to bypass the route-handler body size limit and lift the 5 MB cap toward video support.
+2. Mobile cat avatar replace (separate slice from profile editing because it needs the image picker + multipart flow).
+3. Mobile cat creation (currently only edit, not create — web is still the only place to add a cat).
+4. Mobile token refresh/revocation or session table before production use.
+5. iOS dev build via EAS once Xcode is available, to exercise scanner / image picker / forms / inbox / edit / lists end-to-end.
 
 ---
 

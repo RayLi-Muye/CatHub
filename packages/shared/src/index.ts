@@ -164,6 +164,22 @@ export type MobileCatUpdatePayload = {
   cat: MobileCatDetailPayload["cat"];
 };
 
+export type MobileTimelineListPayload = {
+  posts: MobileCatTimelinePost[];
+  nextOffset: number | null;
+};
+
+export type MobileHealthListPayload = {
+  records: MobileCatHealthRecord[];
+  nextOffset: number | null;
+};
+
+export type MobileWeightListPayload = {
+  weights: MobileCatWeightLog[];
+};
+
+export const MOBILE_LIST_PAGE_SIZE = 20;
+
 export type MobileCatTimelinePost = {
   id: string;
   content: string;

@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { z } from "zod/v4";
 import { db } from "@/lib/db";
@@ -96,4 +96,52 @@ export async function POST(
     },
     { status: 201 }
   );
+}
+
+const WEIGHTS_MAX = 200;
+
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ catId: string }> }
+) {
+  const user = await getMobileAuthUser(request);
+  if (!user) return apiError("Not authenticated", 401);
+
+  const parsedParams = paramsSchema.safeParse(await params);
+  if (!parsedParams.success) return apiError("Invalid cat id");
+
+  const [cat] = await db
+    .select({ id: cats.id, ownerId: cats.ownerId, isPublic: cats.isPublic })
+    .from(cats)
+    .where(eq(cats.id, parsedParams.data.catId))
+    .limit(1);
+
+  if (!cat) return apiError("Cat not found", 404);
+  if (cat.ownerId !== user.id && !cat.isPublic) {
+    return apiError("Cat not found", 404);
+  }
+
+  const rows = await db
+    .select({
+      id: weightLogs.id,
+      weightKg: weightLogs.weightKg,
+      recordedAt: weightLogs.recordedAt,
+      notes: weightLogs.notes,
+    })
+    .from(weightLogs)
+    .where(eq(weightLogs.catId, cat.id))
+    .orderBy(desc(weightLogs.recordedAt))
+    .limit(WEIGHTS_MAX);
+
+  return NextResponse.json({
+    ok: true,
+    data: {
+      weights: rows.map((row) => ({
+        id: row.id,
+        weightKg: row.weightKg,
+        recordedAt: row.recordedAt.toISOString(),
+        notes: row.notes,
+      })),
+    },
+  });
 }

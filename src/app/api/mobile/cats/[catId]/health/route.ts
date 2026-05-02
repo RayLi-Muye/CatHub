@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { z } from "zod/v4";
 import { db } from "@/lib/db";
@@ -98,4 +98,78 @@ export async function POST(
     },
     { status: 201 }
   );
+}
+
+const HEALTH_PAGE_SIZE = 20;
+const HEALTH_MAX_PAGE_SIZE = 50;
+
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ catId: string }> }
+) {
+  const user = await getMobileAuthUser(request);
+  if (!user) return apiError("Not authenticated", 401);
+
+  const parsedParams = paramsSchema.safeParse(await params);
+  if (!parsedParams.success) return apiError("Invalid cat id");
+
+  const url = new URL(request.url);
+  const offset = Math.max(
+    0,
+    Number.parseInt(url.searchParams.get("offset") ?? "0", 10) || 0
+  );
+  const limit = Math.min(
+    HEALTH_MAX_PAGE_SIZE,
+    Math.max(
+      1,
+      Number.parseInt(
+        url.searchParams.get("limit") ?? `${HEALTH_PAGE_SIZE}`,
+        10
+      ) || HEALTH_PAGE_SIZE
+    )
+  );
+
+  const [cat] = await db
+    .select({ id: cats.id, ownerId: cats.ownerId, isPublic: cats.isPublic })
+    .from(cats)
+    .where(eq(cats.id, parsedParams.data.catId))
+    .limit(1);
+
+  if (!cat) return apiError("Cat not found", 404);
+  if (cat.ownerId !== user.id && !cat.isPublic) {
+    return apiError("Cat not found", 404);
+  }
+
+  const rows = await db
+    .select({
+      id: healthRecords.id,
+      type: healthRecords.type,
+      title: healthRecords.title,
+      description: healthRecords.description,
+      date: healthRecords.date,
+      vetName: healthRecords.vetName,
+    })
+    .from(healthRecords)
+    .where(eq(healthRecords.catId, cat.id))
+    .orderBy(desc(healthRecords.date))
+    .offset(offset)
+    .limit(limit + 1);
+
+  const hasMore = rows.length > limit;
+  const slice = hasMore ? rows.slice(0, limit) : rows;
+
+  return NextResponse.json({
+    ok: true,
+    data: {
+      records: slice.map((record) => ({
+        id: record.id,
+        type: record.type,
+        title: record.title,
+        description: record.description,
+        date: record.date.toISOString(),
+        vetName: record.vetName,
+      })),
+      nextOffset: hasMore ? offset + limit : null,
+    },
+  });
 }

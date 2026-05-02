@@ -201,6 +201,7 @@ export default function CatDetailScreen() {
       <Section
         title="Weight"
         empty={recentWeights.length === 0 ? "No weight logs yet." : null}
+        onViewAll={() => router.push(`/cats/${cat.id}/weights`)}
         action={
           cat.isOwner ? (
             <Pressable
@@ -223,6 +224,7 @@ export default function CatDetailScreen() {
       <Section
         title="Health"
         empty={recentHealth.length === 0 ? "No health records yet." : null}
+        onViewAll={() => router.push(`/cats/${cat.id}/health`)}
         action={
           cat.isOwner ? (
             <Pressable
@@ -245,6 +247,7 @@ export default function CatDetailScreen() {
       <Section
         title="Timeline"
         empty={recentTimeline.length === 0 ? "No posts yet." : null}
+        onViewAll={() => router.push(`/cats/${cat.id}/timeline`)}
         action={
           cat.isOwner ? (
             <Pressable
@@ -271,11 +274,13 @@ function Section({
   title,
   empty,
   action,
+  onViewAll,
   children,
 }: {
   title: string;
   empty?: string | null;
   action?: React.ReactNode;
+  onViewAll?: () => void;
   children?: React.ReactNode;
 }) {
   return (
@@ -285,6 +290,17 @@ function Section({
         {action ?? null}
       </View>
       {empty ? <Text style={styles.sectionEmpty}>{empty}</Text> : children}
+      {onViewAll && !empty ? (
+        <Pressable
+          onPress={onViewAll}
+          style={({ pressed }) => [
+            styles.sectionViewAll,
+            pressed && styles.buttonPressed,
+          ]}
+        >
+          <Text style={styles.sectionViewAllText}>View all →</Text>
+        </Pressable>
+      ) : null}
     </View>
   );
 }
@@ -491,6 +507,17 @@ const styles = StyleSheet.create({
   },
   sectionActionText: {
     color: "#ffffff",
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  sectionViewAll: {
+    alignSelf: "flex-end",
+    marginTop: 8,
+    paddingHorizontal: 4,
+    paddingVertical: 4,
+  },
+  sectionViewAllText: {
+    color: "#b45309",
     fontSize: 13,
     fontWeight: "700",
   },

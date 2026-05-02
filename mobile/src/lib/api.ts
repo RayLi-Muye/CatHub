@@ -9,14 +9,17 @@ import type {
   MobileCheckinCreatePayload,
   MobileDashboardPayload,
   MobileHealthCreatePayload,
+  MobileHealthListPayload,
   MobileIdentityCodeLookupPayload,
   MobileLineageInboxPayload,
   MobileLineageRequestPayload,
   MobileLineageRespondAction,
   MobileLineageRespondPayload,
   MobileTimelineCreatePayload,
+  MobileTimelineListPayload,
   MobileUser,
   MobileWeightCreatePayload,
+  MobileWeightListPayload,
 } from "@cathub/shared";
 import { Platform } from "react-native";
 import { getAccessToken, setAccessToken } from "./token-store";
@@ -105,6 +108,24 @@ export async function getDashboard() {
 export async function getCatDetail(catId: string) {
   return request<MobileCatDetailPayload>(
     `/api/mobile/cats/${encodeURIComponent(catId)}`
+  );
+}
+
+export async function getCatTimeline(catId: string, offset = 0) {
+  return request<MobileTimelineListPayload>(
+    `/api/mobile/cats/${encodeURIComponent(catId)}/timeline?offset=${offset}`
+  );
+}
+
+export async function getCatHealth(catId: string, offset = 0) {
+  return request<MobileHealthListPayload>(
+    `/api/mobile/cats/${encodeURIComponent(catId)}/health?offset=${offset}`
+  );
+}
+
+export async function getCatWeights(catId: string) {
+  return request<MobileWeightListPayload>(
+    `/api/mobile/cats/${encodeURIComponent(catId)}/weights`
   );
 }
 
