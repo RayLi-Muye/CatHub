@@ -33,6 +33,14 @@ const API_BASE_URL =
   process.env.EXPO_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ??
   DEFAULT_API_BASE_URL;
 
+// Optional Vercel Deployment Protection bypass for preview testing. Generate
+// in Vercel project Settings → Deployment Protection → Protection Bypass for
+// Automation, then expose as EXPO_PUBLIC_VERCEL_PROTECTION_BYPASS in
+// mobile/.env.local. Leave unset for production builds where preview
+// protection isn't in play.
+const VERCEL_PROTECTION_BYPASS = process.env
+  .EXPO_PUBLIC_VERCEL_PROTECTION_BYPASS;
+
 async function request<T>(
   path: string,
   init: RequestInit = {}
@@ -52,6 +60,11 @@ async function request<T>(
   const token = await getAccessToken();
   if (token) {
     headers.set("Authorization", `Bearer ${token}`);
+  }
+
+  if (VERCEL_PROTECTION_BYPASS) {
+    headers.set("x-vercel-protection-bypass", VERCEL_PROTECTION_BYPASS);
+    headers.set("x-vercel-set-bypass-cookie", "true");
   }
 
   try {
