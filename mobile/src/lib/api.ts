@@ -41,6 +41,21 @@ const API_BASE_URL =
 const VERCEL_PROTECTION_BYPASS = process.env
   .EXPO_PUBLIC_VERCEL_PROTECTION_BYPASS;
 
+function withBypassQuery(path: string) {
+  if (!VERCEL_PROTECTION_BYPASS) return path;
+  // Vercel Deployment Protection: the URL query form passes the bypass
+  // through CORS preflight too (custom headers don't, because the browser
+  // strips them from the OPTIONS request, and Vercel's auth wall runs ahead
+  // of our middleware). Documented at
+  //   vercel.com/docs/deployment-protection/methods-to-bypass-deployment-protection/protection-bypass-automation
+  const sep = path.includes("?") ? "&" : "?";
+  const params = new URLSearchParams({
+    "x-vercel-protection-bypass": VERCEL_PROTECTION_BYPASS,
+    "x-vercel-set-bypass-cookie": "true",
+  }).toString();
+  return `${path}${sep}${params}`;
+}
+
 async function request<T>(
   path: string,
   init: RequestInit = {}
@@ -62,13 +77,15 @@ async function request<T>(
     headers.set("Authorization", `Bearer ${token}`);
   }
 
+  // Header form is kept as a backup for non-browser clients; the query form
+  // attached below is what actually clears the Vercel auth wall in browsers.
   if (VERCEL_PROTECTION_BYPASS) {
     headers.set("x-vercel-protection-bypass", VERCEL_PROTECTION_BYPASS);
     headers.set("x-vercel-set-bypass-cookie", "true");
   }
 
   try {
-    const response = await fetch(`${API_BASE_URL}${path}`, {
+    const response = await fetch(`${API_BASE_URL}${withBypassQuery(path)}`, {
       ...init,
       headers,
     });
