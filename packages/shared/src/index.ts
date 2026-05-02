@@ -142,6 +142,28 @@ export type MobileLineageRespondPayload = {
 
 export const lineageResponseNoteMax = 500;
 
+export const catNameMax = 100;
+export const catBreedMax = 100;
+export const catColorMarkingsMax = 255;
+export const catDescriptionMax = 2000;
+export const catMicrochipMax = 50;
+
+export type MobileCatUpdateInput = {
+  name?: string;
+  breed?: string | null;
+  sex?: CatSex;
+  birthdate?: string | null;
+  description?: string | null;
+  colorMarkings?: string | null;
+  microchipId?: string | null;
+  isNeutered?: boolean;
+  isPublic?: boolean;
+};
+
+export type MobileCatUpdatePayload = {
+  cat: MobileCatDetailPayload["cat"];
+};
+
 export type MobileCatTimelinePost = {
   id: string;
   content: string;

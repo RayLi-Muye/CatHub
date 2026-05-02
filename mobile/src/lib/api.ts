@@ -4,6 +4,8 @@ import type {
   HealthRecordType,
   MobileAuthPayload,
   MobileCatDetailPayload,
+  MobileCatUpdateInput,
+  MobileCatUpdatePayload,
   MobileCheckinCreatePayload,
   MobileDashboardPayload,
   MobileHealthCreatePayload,
@@ -103,6 +105,13 @@ export async function getDashboard() {
 export async function getCatDetail(catId: string) {
   return request<MobileCatDetailPayload>(
     `/api/mobile/cats/${encodeURIComponent(catId)}`
+  );
+}
+
+export async function updateCat(catId: string, input: MobileCatUpdateInput) {
+  return request<MobileCatUpdatePayload>(
+    `/api/mobile/cats/${encodeURIComponent(catId)}`,
+    { method: "PATCH", body: JSON.stringify(input) }
   );
 }
 

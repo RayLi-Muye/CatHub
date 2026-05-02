@@ -119,14 +119,33 @@ export default function CatDetailScreen() {
   return (
     <ScrollView contentContainerStyle={styles.screen}>
       <View style={styles.topBar}>
-        <View>
+        <View style={styles.topBarText}>
           <Text style={styles.eyebrow}>Cat</Text>
           <Text style={styles.title}>{cat.name}</Text>
           {meta ? <Text style={styles.subtitle}>{meta}</Text> : null}
         </View>
-        <Pressable onPress={() => router.back()} style={styles.secondaryButton}>
-          <Text style={styles.secondaryButtonText}>Back</Text>
-        </Pressable>
+        <View style={styles.topBarActions}>
+          {cat.isOwner ? (
+            <Pressable
+              onPress={() => router.push(`/cats/${cat.id}/edit`)}
+              style={({ pressed }) => [
+                styles.secondaryButton,
+                pressed && styles.buttonPressed,
+              ]}
+            >
+              <Text style={styles.secondaryButtonText}>Edit</Text>
+            </Pressable>
+          ) : null}
+          <Pressable
+            onPress={() => router.back()}
+            style={({ pressed }) => [
+              styles.secondaryButton,
+              pressed && styles.buttonPressed,
+            ]}
+          >
+            <Text style={styles.secondaryButtonText}>Back</Text>
+          </Pressable>
+        </View>
       </View>
 
       <View style={styles.heroCard}>
@@ -364,6 +383,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 24,
+  },
+  topBarText: {
+    flex: 1,
+    paddingRight: 12,
+  },
+  topBarActions: {
+    flexDirection: "row",
+    gap: 8,
   },
   eyebrow: {
     color: "#b45309",

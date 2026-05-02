@@ -8,7 +8,7 @@
 
 ## Current Status
 
-CatHub is in MVP development. The web app currently supports account auth, cat profiles, avatar uploads through Vercel Blob, health records, weight logs, social timeline posts, daily check-ins, video posts, and lineage tracking. The Expo React Native mobile app now has mobile auth endpoints, login/register screens, token storage, dashboard cat list, read-only cat detail screen with timeline/health/weight/check-in summary, owner-only timeline post creation with image upload, owner-only daily check-in entry, owner-only health record entry, owner-only weight log entry, lineage inbox with accept/decline/cancel, manual identity-code connect, and QR-code scanning for lineage connection requests.
+CatHub is in MVP development. The web app currently supports account auth, cat profiles, avatar uploads through Vercel Blob, health records, weight logs, social timeline posts, daily check-ins, video posts, and lineage tracking. The Expo React Native mobile app now has mobile auth endpoints, login/register screens, token storage, dashboard cat list, read-only cat detail screen with timeline/health/weight/check-in summary, owner-only timeline post creation with image upload, owner-only daily check-in entry, owner-only health record entry, owner-only weight log entry, owner-only cat profile editing, lineage inbox with accept/decline/cancel, manual identity-code connect, and QR-code scanning for lineage connection requests.
 
 The lineage system now supports:
 
@@ -20,6 +20,23 @@ The lineage system now supports:
 ---
 
 ## Recent Changes
+
+### 2026-05-02 - Mobile Cat Profile Editing
+
+- Added `PATCH /api/mobile/cats/[catId]` accepting JSON with optional fields name, breed, sex, birthdate, description, colorMarkings, microchipId, isNeutered, isPublic. Owner-only; partial updates allowed.
+- Renaming a cat re-runs the same `slugify` from `transliteration` used by the web action; same-owner slug collisions get a `${slug}-${timestamp}` suffix.
+- Added `MobileCatUpdateInput`, `MobileCatUpdatePayload`, and `cat*Max` constants to `@cathub/shared`.
+- Added `updateCat` in the mobile API client.
+- Added `mobile/app/cats/[catId]/edit.tsx` with name/breed/birthdate/color/microchip/description text inputs, sex chip grid, neutered + public toggles, prefilled from `getCatDetail`. Non-owner access is rejected at load time.
+- Detail screen top bar now shows an owner-only "Edit" button next to "Back".
+
+Validation:
+
+- `pnpm --filter @cathub/shared typecheck`
+- `pnpm --filter @cathub/mobile typecheck`
+- `pnpm lint`
+- `pnpm build`
+- End-to-end PATCH not exercised here; needs a logged-in mobile session against a real `DATABASE_URL`.
 
 ### 2026-05-02 - Mobile Lineage Inbox (Accept / Decline / Cancel)
 
@@ -252,11 +269,12 @@ Validation:
 
 Recommended next feature slice:
 
-1. Mobile cat profile editing (rename, breed, sex, color markings, public/private toggle, avatar replace).
-2. Paginated mobile feed lists (full timeline / full health / full weight chart) past the detail summary cap.
-3. Switch mobile image upload to Vercel Blob client direct upload via a signed-URL endpoint to bypass the route-handler body size limit and lift the 5 MB cap toward video support.
-4. Mobile token refresh/revocation or session table before production use.
-5. iOS dev build via EAS once Xcode is available, to exercise scanner / image picker / forms / inbox end-to-end.
+1. Paginated mobile feed lists (full timeline / full health / full weight chart) past the detail summary cap.
+2. Switch mobile image upload to Vercel Blob client direct upload via a signed-URL endpoint to bypass the route-handler body size limit and lift the 5 MB cap toward video support.
+3. Mobile cat avatar replace (separate slice from profile editing because it needs the image picker + multipart flow).
+4. Mobile cat creation (currently only edit, not create — web is still the only place to add a cat).
+5. Mobile token refresh/revocation or session table before production use.
+6. iOS dev build via EAS once Xcode is available, to exercise scanner / image picker / forms / inbox / edit end-to-end.
 
 ---
 
