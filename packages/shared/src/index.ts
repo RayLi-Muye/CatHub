@@ -164,6 +164,22 @@ export type MobileCatUpdatePayload = {
   cat: MobileCatDetailPayload["cat"];
 };
 
+export type MobileCatCreateInput = {
+  name: string;
+  breed?: string | null;
+  sex?: CatSex;
+  birthdate?: string | null;
+  description?: string | null;
+  colorMarkings?: string | null;
+  microchipId?: string | null;
+  isNeutered?: boolean;
+  isPublic?: boolean;
+};
+
+export type MobileCatCreatePayload = {
+  cat: MobileCatDetailPayload["cat"];
+};
+
 export type MobileTimelineListPayload = {
   posts: MobileCatTimelinePost[];
   nextOffset: number | null;

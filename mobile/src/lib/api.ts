@@ -3,6 +3,8 @@ import type {
   BowelStatus,
   HealthRecordType,
   MobileAuthPayload,
+  MobileCatCreateInput,
+  MobileCatCreatePayload,
   MobileCatDetailPayload,
   MobileCatUpdateInput,
   MobileCatUpdatePayload,
@@ -127,6 +129,13 @@ export async function getCatWeights(catId: string) {
   return request<MobileWeightListPayload>(
     `/api/mobile/cats/${encodeURIComponent(catId)}/weights`
   );
+}
+
+export async function createCat(input: MobileCatCreateInput) {
+  return request<MobileCatCreatePayload>("/api/mobile/cats", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
 }
 
 export async function updateCat(catId: string, input: MobileCatUpdateInput) {

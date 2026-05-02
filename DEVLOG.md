@@ -8,7 +8,7 @@
 
 ## Current Status
 
-CatHub is in MVP development. The web app currently supports account auth, cat profiles, avatar uploads through Vercel Blob, health records, weight logs, social timeline posts, daily check-ins, video posts, and lineage tracking. The Expo React Native mobile app now has mobile auth endpoints, login/register screens, token storage, dashboard cat list, cat detail screen with timeline/health/weight/check-in summary plus paginated full-list screens, owner-only timeline post creation with image upload, owner-only daily check-in / health / weight entry forms, owner-only cat profile editing, lineage inbox with accept/decline/cancel, manual identity-code connect, and QR-code scanning for lineage connection requests.
+CatHub is in MVP development. The web app currently supports account auth, cat profiles, avatar uploads through Vercel Blob, health records, weight logs, social timeline posts, daily check-ins, video posts, and lineage tracking. The Expo React Native mobile app now has mobile auth endpoints, login/register screens, token storage, dashboard cat list with create/refresh-on-focus, cat creation, cat profile editing, cat detail screen with timeline/health/weight/check-in summary plus paginated full-list screens, owner-only timeline post creation with image upload, owner-only daily check-in / health / weight entry forms, lineage inbox with accept/decline/cancel, manual identity-code connect, and QR-code scanning for lineage connection requests.
 
 The lineage system now supports:
 
@@ -20,6 +20,21 @@ The lineage system now supports:
 ---
 
 ## Recent Changes
+
+### 2026-05-02 - Mobile Cat Creation
+
+- Added `POST /api/mobile/cats` accepting JSON `{ name, breed?, sex?, birthdate?, description?, colorMarkings?, microchipId?, isNeutered?, isPublic? }`. Authenticated user becomes the owner. Slug is generated via the same `slugify` from `transliteration` as the web action; same-owner slug collisions get a timestamp suffix.
+- Added `MobileCatCreateInput` and `MobileCatCreatePayload` to `@cathub/shared`.
+- Added `createCat` in the mobile API client.
+- Added `mobile/app/cats/new.tsx` mirroring the edit form (name, breed, sex chips, birthdate, color, microchip, description, neutered + public toggles); on success replaces to the new cat detail screen.
+- Dashboard now shows an "Add cat" button alongside "Lineage inbox" and refreshes the cat list on focus (so newly created cats appear immediately when the user navigates back).
+
+Validation:
+
+- `pnpm --filter @cathub/shared typecheck`
+- `pnpm --filter @cathub/mobile typecheck`
+- `pnpm lint`
+- `pnpm build` (route appears as `/api/mobile/cats`)
 
 ### 2026-05-02 - Mobile Paginated Feed Lists
 
@@ -288,11 +303,10 @@ Validation:
 
 Recommended next feature slice:
 
-1. Switch mobile image upload to Vercel Blob client direct upload via a signed-URL endpoint to bypass the route-handler body size limit and lift the 5 MB cap toward video support.
-2. Mobile cat avatar replace (separate slice from profile editing because it needs the image picker + multipart flow).
-3. Mobile cat creation (currently only edit, not create — web is still the only place to add a cat).
-4. Mobile token refresh/revocation or session table before production use.
-5. iOS dev build via EAS once Xcode is available, to exercise scanner / image picker / forms / inbox / edit / lists end-to-end.
+1. Switch mobile image upload to Vercel Blob client direct upload via a signed-URL endpoint to bypass the Vercel route-handler 4.5 MB body limit and lift the 5 MB cap toward video support.
+2. Mobile cat avatar upload (slot in once the direct-upload endpoint exists).
+3. Mobile token refresh/revocation or session table before production use.
+4. iOS dev build via EAS once Xcode is available, to exercise scanner / image picker / forms / inbox / edit / lists / create end-to-end.
 
 ---
 

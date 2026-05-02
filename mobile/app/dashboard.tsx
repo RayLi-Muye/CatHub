@@ -1,6 +1,6 @@
 import type { MobileCat, MobileUser } from "@cathub/shared";
-import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -20,26 +20,28 @@ export default function DashboardScreen() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    let isMounted = true;
-
-    getDashboard().then((result) => {
-      if (!isMounted) return;
-      if (!result.ok) {
-        setError(result.error);
-        setIsLoading(false);
-        return;
-      }
-
+  const refresh = useCallback(async (initial = false) => {
+    const result = await getDashboard();
+    if (!result.ok) {
+      setError(result.error);
+    } else {
+      setError(null);
       setUser(result.data.user);
       setCats(result.data.cats);
-      setIsLoading(false);
-    });
-
-    return () => {
-      isMounted = false;
-    };
+    }
+    if (initial) setIsLoading(false);
   }, []);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void refresh(true);
+  }, [refresh]);
+
+  useFocusEffect(
+    useCallback(() => {
+      void refresh();
+    }, [refresh])
+  );
 
   async function handleSignOut() {
     await clearAccessToken();
@@ -104,16 +106,28 @@ export default function DashboardScreen() {
         </Pressable>
       </View>
 
-      <Pressable
-        onPress={() => router.push("/inbox")}
-        style={({ pressed }) => [
-          styles.tertiaryButton,
-          styles.inboxButton,
-          pressed && styles.buttonPressed,
-        ]}
-      >
-        <Text style={styles.tertiaryButtonText}>Lineage inbox</Text>
-      </Pressable>
+      <View style={styles.actionRow}>
+        <Pressable
+          onPress={() => router.push("/cats/new")}
+          style={({ pressed }) => [
+            styles.primaryButton,
+            styles.actionFlex,
+            pressed && styles.buttonPressed,
+          ]}
+        >
+          <Text style={styles.primaryButtonText}>Add cat</Text>
+        </Pressable>
+        <Pressable
+          onPress={() => router.push("/inbox")}
+          style={({ pressed }) => [
+            styles.tertiaryButton,
+            styles.actionFlex,
+            pressed && styles.buttonPressed,
+          ]}
+        >
+          <Text style={styles.tertiaryButtonText}>Lineage inbox</Text>
+        </Pressable>
+      </View>
 
       <FlatList
         contentContainerStyle={styles.listContent}
@@ -256,6 +270,9 @@ const styles = StyleSheet.create({
   },
   inboxButton: {
     marginBottom: 18,
+  },
+  emptyAdd: {
+    marginTop: 18,
   },
   tertiaryButtonText: {
     color: "#b45309",

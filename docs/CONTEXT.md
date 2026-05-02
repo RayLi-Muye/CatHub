@@ -110,6 +110,7 @@ Workspace layout:
 - Dashboard exposes a "Lineage inbox" entry below the connect actions.
 - Owners can edit cat profiles from `mobile/app/cats/[catId]/edit.tsx` (name, breed, sex, birthdate, color, microchip, description, neutered toggle, public toggle) via `PATCH /api/mobile/cats/[catId]`. Renaming regenerates the slug; same-owner slug collisions get a timestamp suffix.
 - Detail screen exposes an owner-only "Edit" button in the top bar.
+- Owners can create new cats from `mobile/app/cats/new.tsx` via `POST /api/mobile/cats`. Dashboard exposes "Add cat" alongside "Lineage inbox" and refreshes the cat list on focus.
 - Detail screen sections (Timeline, Health, Weight) each link to a full-list screen via "View all →":
   - `mobile/app/cats/[catId]/timeline.tsx` — paginated post list with "Load more"
   - `mobile/app/cats/[catId]/health.tsx` — paginated health record list with "Load more"
@@ -140,6 +141,7 @@ Workspace layout:
 | `/api/mobile/auth/register` | Public | Mobile registration JSON endpoint |
 | `/api/mobile/auth/me` | Mobile token required | Current mobile user |
 | `/api/mobile/dashboard` | Mobile token required | Current user and owned cats for mobile dashboard |
+| `/api/mobile/cats` (POST) | Mobile token required | Create a cat profile owned by the authenticated user |
 | `/api/mobile/cats/[catId]` (GET) | Mobile token required | Cat detail summary (cat, recent timeline, recent health, recent weights, latest check-in) |
 | `/api/mobile/cats/[catId]` (PATCH) | Mobile token required, owner only | Edit cat profile fields (name, breed, sex, birthdate, color, microchip, neutered, public toggle); regenerates slug on rename |
 | `/api/mobile/cats/[catId]/timeline` (GET) | Mobile token required (public cat ok) | Paginated timeline posts (`offset`, `limit`, returns `nextOffset`) |
@@ -200,7 +202,7 @@ Lineage-specific enums:
 - Lineage page: `src/app/[username]/[catname]/lineage/page.tsx`
 - Dashboard: `src/app/(main)/dashboard/page.tsx`
 - Mobile app entry: `mobile/app/_layout.tsx`, `mobile/app/index.tsx`
-- Mobile screens: `mobile/app/login.tsx`, `mobile/app/register.tsx`, `mobile/app/dashboard.tsx`, `mobile/app/connect.tsx`, `mobile/app/scan.tsx`, `mobile/app/inbox.tsx`, `mobile/app/cats/[catId]/index.tsx`, `mobile/app/cats/[catId]/edit.tsx`, `mobile/app/cats/[catId]/post-new.tsx`, `mobile/app/cats/[catId]/checkin-new.tsx`, `mobile/app/cats/[catId]/health-new.tsx`, `mobile/app/cats/[catId]/weight-new.tsx`, `mobile/app/cats/[catId]/timeline.tsx`, `mobile/app/cats/[catId]/health.tsx`, `mobile/app/cats/[catId]/weights.tsx`
+- Mobile screens: `mobile/app/login.tsx`, `mobile/app/register.tsx`, `mobile/app/dashboard.tsx`, `mobile/app/connect.tsx`, `mobile/app/scan.tsx`, `mobile/app/inbox.tsx`, `mobile/app/cats/new.tsx`, `mobile/app/cats/[catId]/index.tsx`, `mobile/app/cats/[catId]/edit.tsx`, `mobile/app/cats/[catId]/post-new.tsx`, `mobile/app/cats/[catId]/checkin-new.tsx`, `mobile/app/cats/[catId]/health-new.tsx`, `mobile/app/cats/[catId]/weight-new.tsx`, `mobile/app/cats/[catId]/timeline.tsx`, `mobile/app/cats/[catId]/health.tsx`, `mobile/app/cats/[catId]/weights.tsx`
 - Mobile API client: `mobile/src/lib/api.ts`
 - Mobile token store: `mobile/src/lib/token-store.ts`
 - Mobile auth helpers: `src/lib/mobile-auth.ts`
