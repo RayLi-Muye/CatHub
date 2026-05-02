@@ -92,6 +92,56 @@ export type MobileLineageRequestPayload = {
   message: string;
 };
 
+export type MobileLineageRequestSummary = {
+  id: string;
+  status: "pending" | "accepted" | "declined" | "canceled";
+  parentRole: "sire" | "dam" | "unknown";
+  requestNote: string | null;
+  responseNote: string | null;
+  createdAt: string;
+  respondedAt: string | null;
+  child: {
+    id: string;
+    name: string;
+    breed: string | null;
+    sex: CatSex | null;
+    slug: string;
+    username: string;
+    ownerDisplayName: string | null;
+  };
+  parent: {
+    id: string;
+    name: string;
+    breed: string | null;
+    sex: CatSex | null;
+    slug: string;
+    username: string;
+    ownerDisplayName: string | null;
+  };
+  requester: {
+    username: string;
+    displayName: string | null;
+  };
+  responder: {
+    username: string;
+    displayName: string | null;
+  };
+};
+
+export type MobileLineageInboxPayload = {
+  incoming: MobileLineageRequestSummary[];
+  outgoing: MobileLineageRequestSummary[];
+};
+
+export type MobileLineageRespondAction = "accept" | "decline" | "cancel";
+
+export type MobileLineageRespondPayload = {
+  request: MobileLineageRequestSummary;
+  message: string;
+};
+
+export const lineageResponseNoteMax = 500;
+
 export type MobileCatTimelinePost = {
   id: string;
   content: string;

@@ -8,7 +8,7 @@
 
 ## Current Status
 
-CatHub is in MVP development. The web app currently supports account auth, cat profiles, avatar uploads through Vercel Blob, health records, weight logs, social timeline posts, daily check-ins, video posts, and lineage tracking. The Expo React Native mobile app now has mobile auth endpoints, login/register screens, token storage, dashboard cat list, read-only cat detail screen with timeline/health/weight/check-in summary, owner-only timeline post creation with image upload, owner-only daily check-in entry, owner-only health record entry, owner-only weight log entry, manual identity-code connect, and QR-code scanning for lineage connection requests.
+CatHub is in MVP development. The web app currently supports account auth, cat profiles, avatar uploads through Vercel Blob, health records, weight logs, social timeline posts, daily check-ins, video posts, and lineage tracking. The Expo React Native mobile app now has mobile auth endpoints, login/register screens, token storage, dashboard cat list, read-only cat detail screen with timeline/health/weight/check-in summary, owner-only timeline post creation with image upload, owner-only daily check-in entry, owner-only health record entry, owner-only weight log entry, lineage inbox with accept/decline/cancel, manual identity-code connect, and QR-code scanning for lineage connection requests.
 
 The lineage system now supports:
 
@@ -20,6 +20,23 @@ The lineage system now supports:
 ---
 
 ## Recent Changes
+
+### 2026-05-02 - Mobile Lineage Inbox (Accept / Decline / Cancel)
+
+- Added `GET /api/mobile/lineage/requests` returning pending incoming and outgoing lineage connection requests for the authenticated user, reusing the existing `getLineageConnectionInbox` query helper.
+- Added `PATCH /api/mobile/lineage/requests/[requestId]` accepting `{ action: "accept" | "decline" | "cancel", responseNote? }`. Responder-only for accept/decline; requester-only for cancel. Accept replays the web action's full edge-creation logic: role/sex validation, cycle check, same-pair-other-role detection, and disputed-takeover when an existing same-role parent conflicts.
+- Added `MobileLineageRequestSummary`, `MobileLineageInboxPayload`, `MobileLineageRespondAction`, and `MobileLineageRespondPayload` to `@cathub/shared`, plus `lineageResponseNoteMax`.
+- Added `getLineageInbox` and `respondLineageRequest` in the mobile API client. Hardened the `request()` helper Content-Type check against undefined bodies.
+- Added `mobile/app/inbox.tsx` with incoming/outgoing tabs, per-card accept/decline (incoming) or cancel (outgoing) actions, success/error banners, and post-action refresh.
+- Dashboard now shows a "Lineage inbox" entry below the connect actions.
+
+Validation:
+
+- `pnpm --filter @cathub/shared typecheck`
+- `pnpm --filter @cathub/mobile typecheck`
+- `pnpm lint`
+- `pnpm build` (routes appear as `/api/mobile/lineage/requests` and `/api/mobile/lineage/requests/[requestId]`)
+- End-to-end accept/decline/cancel not exercised here; needs a logged-in mobile session against a real `DATABASE_URL`.
 
 ### 2026-04-30 - Mobile Health Record + Weight Log Entry
 
@@ -235,12 +252,11 @@ Validation:
 
 Recommended next feature slice:
 
-1. Paginated mobile feed lists (full timeline / full health / full weight chart) past the detail summary cap.
-2. Mobile cat profile editing (rename, breed, sex, color markings, public/private toggle).
+1. Mobile cat profile editing (rename, breed, sex, color markings, public/private toggle, avatar replace).
+2. Paginated mobile feed lists (full timeline / full health / full weight chart) past the detail summary cap.
 3. Switch mobile image upload to Vercel Blob client direct upload via a signed-URL endpoint to bypass the route-handler body size limit and lift the 5 MB cap toward video support.
-4. Mobile lineage view + accept/decline of incoming external lineage requests.
-5. Mobile token refresh/revocation or session table before production use.
-6. iOS dev build via EAS once Xcode is available, to exercise scanner / image picker / forms end-to-end.
+4. Mobile token refresh/revocation or session table before production use.
+5. iOS dev build via EAS once Xcode is available, to exercise scanner / image picker / forms / inbox end-to-end.
 
 ---
 

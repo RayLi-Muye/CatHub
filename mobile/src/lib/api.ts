@@ -8,7 +8,10 @@ import type {
   MobileDashboardPayload,
   MobileHealthCreatePayload,
   MobileIdentityCodeLookupPayload,
+  MobileLineageInboxPayload,
   MobileLineageRequestPayload,
+  MobileLineageRespondAction,
+  MobileLineageRespondPayload,
   MobileTimelineCreatePayload,
   MobileUser,
   MobileWeightCreatePayload,
@@ -34,7 +37,8 @@ async function request<T>(
   // let fetch generate its own multipart/form-data boundary header.
   const isFormData =
     typeof FormData !== "undefined" && init.body instanceof FormData;
-  if (init.body && !isFormData && !headers.has("Content-Type")) {
+  const hasBody = init.body !== undefined && init.body !== null;
+  if (hasBody && !isFormData && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
 
@@ -162,6 +166,20 @@ export async function createWeightLog(
   return request<MobileWeightCreatePayload>(
     `/api/mobile/cats/${encodeURIComponent(catId)}/weights`,
     { method: "POST", body: JSON.stringify(input) }
+  );
+}
+
+export async function getLineageInbox() {
+  return request<MobileLineageInboxPayload>("/api/mobile/lineage/requests");
+}
+
+export async function respondLineageRequest(
+  requestId: string,
+  input: { action: MobileLineageRespondAction; responseNote?: string | null }
+) {
+  return request<MobileLineageRespondPayload>(
+    `/api/mobile/lineage/requests/${encodeURIComponent(requestId)}`,
+    { method: "PATCH", body: JSON.stringify(input) }
   );
 }
 

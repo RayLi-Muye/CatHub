@@ -104,6 +104,17 @@ export default function DashboardScreen() {
         </Pressable>
       </View>
 
+      <Pressable
+        onPress={() => router.push("/inbox")}
+        style={({ pressed }) => [
+          styles.tertiaryButton,
+          styles.inboxButton,
+          pressed && styles.buttonPressed,
+        ]}
+      >
+        <Text style={styles.tertiaryButtonText}>Lineage inbox</Text>
+      </Pressable>
+
       <FlatList
         contentContainerStyle={styles.listContent}
         data={cats}
@@ -242,6 +253,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     justifyContent: "center",
     minHeight: 48,
+  },
+  inboxButton: {
+    marginBottom: 18,
   },
   tertiaryButtonText: {
     color: "#b45309",

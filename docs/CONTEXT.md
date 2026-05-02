@@ -106,6 +106,8 @@ Workspace layout:
 - Owners can record daily check-ins from `mobile/app/cats/[catId]/checkin-new.tsx` (date, appetite/energy 1-5, bowel status, mood emoji, notes) via `POST /api/mobile/cats/[catId]/checkins`. Same-day duplicates rejected with 409.
 - Owners can add health records from `mobile/app/cats/[catId]/health-new.tsx` (type, title, date, vet name, vet clinic, description) via `POST /api/mobile/cats/[catId]/health`.
 - Owners can log weights from `mobile/app/cats/[catId]/weight-new.tsx` (weightKg, recordedAt, notes) via `POST /api/mobile/cats/[catId]/weights`. Weight bounded to 0-50 kg with up to 2 decimals.
+- Mobile lineage inbox at `mobile/app/inbox.tsx` shows pending incoming and outgoing requests in tabs. Responders can accept/decline incoming; requesters can cancel outgoing. Accept reuses the same edge creation logic as the web action (cycle check, role/sex validation, disputed-takeover when an existing same-role parent conflicts).
+- Dashboard exposes a "Lineage inbox" entry below the connect actions.
 - The timeline POST endpoint accepts multipart/form-data (`content`, optional `image` file, optional `isHealthAlert`, optional `tags`), uploads images to Vercel Blob server-side, and inserts the post.
 - Photo library permission is configured through the `expo-image-picker` config plugin in `mobile/app.json`.
 
@@ -137,6 +139,8 @@ Workspace layout:
 | `/api/mobile/cats/[catId]/checkins` (POST) | Mobile token required, owner only | Create a daily check-in (one per day per cat) |
 | `/api/mobile/cats/[catId]/health` (POST) | Mobile token required, owner only | Create a health record |
 | `/api/mobile/cats/[catId]/weights` (POST) | Mobile token required, owner only | Create a weight log |
+| `/api/mobile/lineage/requests` (GET) | Mobile token required | List pending incoming and outgoing lineage connection requests |
+| `/api/mobile/lineage/requests/[requestId]` (PATCH) | Mobile token required | Accept/decline (responder) or cancel (requester) a pending request |
 | `/api/mobile/connect/identity-code` | Mobile token required | Look up identity code and create external lineage request |
 
 ---
@@ -186,7 +190,7 @@ Lineage-specific enums:
 - Lineage page: `src/app/[username]/[catname]/lineage/page.tsx`
 - Dashboard: `src/app/(main)/dashboard/page.tsx`
 - Mobile app entry: `mobile/app/_layout.tsx`, `mobile/app/index.tsx`
-- Mobile screens: `mobile/app/login.tsx`, `mobile/app/register.tsx`, `mobile/app/dashboard.tsx`, `mobile/app/connect.tsx`, `mobile/app/scan.tsx`, `mobile/app/cats/[catId]/index.tsx`, `mobile/app/cats/[catId]/post-new.tsx`, `mobile/app/cats/[catId]/checkin-new.tsx`, `mobile/app/cats/[catId]/health-new.tsx`, `mobile/app/cats/[catId]/weight-new.tsx`
+- Mobile screens: `mobile/app/login.tsx`, `mobile/app/register.tsx`, `mobile/app/dashboard.tsx`, `mobile/app/connect.tsx`, `mobile/app/scan.tsx`, `mobile/app/inbox.tsx`, `mobile/app/cats/[catId]/index.tsx`, `mobile/app/cats/[catId]/post-new.tsx`, `mobile/app/cats/[catId]/checkin-new.tsx`, `mobile/app/cats/[catId]/health-new.tsx`, `mobile/app/cats/[catId]/weight-new.tsx`
 - Mobile API client: `mobile/src/lib/api.ts`
 - Mobile token store: `mobile/src/lib/token-store.ts`
 - Mobile auth helpers: `src/lib/mobile-auth.ts`
