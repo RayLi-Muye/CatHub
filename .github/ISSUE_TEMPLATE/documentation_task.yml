@@ -1,0 +1,45 @@
+name: Documentation task
+description: Improve CatHub documentation, runbooks, templates, or GitHub-facing project docs.
+title: "[Docs]: "
+labels:
+  - documentation
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this for README, docs, runbooks, templates, release notes, or documentation governance. Do not include secrets or private operational data.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What documentation is missing, stale, confusing, or hard to discover?
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: Which files or documentation areas should change?
+      placeholder: |
+        In scope:
+        - ...
+        Out of scope:
+        - ...
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Concrete checks for closing this task.
+      placeholder: |
+        - [ ] The entry point links to the relevant docs.
+        - [ ] Commands and environment notes are current.
+        - [ ] Sensitive values are referenced by name only, never copied.
+    validations:
+      required: true
+  - type: textarea
+    id: validation
+    attributes:
+      label: Validation
+      description: Suggested docs validation such as `git diff --check`, link checks, screenshots, or rendered preview.
