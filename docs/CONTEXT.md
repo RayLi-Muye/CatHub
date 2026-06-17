@@ -231,6 +231,7 @@ pnpm mobile:ios
 pnpm mobile:ios:run
 pnpm mobile:android
 pnpm mobile:web
+pnpm mobile:dev-api:check
 pnpm shared:typecheck
 pnpm db:generate
 pnpm db:push
@@ -244,8 +245,10 @@ Notes:
 - Use `pnpm db:push` only when intentionally syncing the active development DB.
 - If pnpm is not installed globally, `npx pnpm@10.33.2 <command>` works with the pinned package manager version.
 - Expo dependency compatibility can be checked with `pnpm --filter @cathub/mobile exec expo install --check`.
-- Mobile API calls default to `http://localhost:3000`; run the Next.js app on port 3000 while testing authenticated mobile screens.
+- Mobile API calls default to `http://localhost:<EXPO_PUBLIC_API_PORT || 3000>` when `EXPO_PUBLIC_API_BASE_URL` is unset. Set `EXPO_PUBLIC_API_PORT=3100` when port 3000 is busy.
+- `EXPO_PUBLIC_API_BASE_URL=http://<host>:<port>` remains the full URL override and takes precedence over `EXPO_PUBLIC_API_PORT`.
 - For a physical phone, set `EXPO_PUBLIC_API_BASE_URL=http://<computer-lan-ip>:3000` and run Next.js on a reachable host.
+- Mobile dev API fallback configuration can be checked with `pnpm mobile:dev-api:check`.
 - iOS Simulator requires full Xcode, not only Command Line Tools. After installing Xcode, run `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer`, open Xcode once, install an iOS runtime in Xcode Settings > Platforms, then verify with `xcrun simctl list devices available`.
 
 ---
@@ -258,6 +261,7 @@ Before committing code changes:
 - Run `pnpm build`.
 - Run `pnpm --filter @cathub/shared typecheck` when editing shared code.
 - Run `pnpm --filter @cathub/mobile typecheck` and `pnpm --filter @cathub/mobile exec expo install --check` when editing mobile code.
+- Run `pnpm mobile:dev-api:check` when editing mobile local API URL fallback behavior.
 - For schema changes, run `pnpm db:generate`.
 - For DB behavior, use transaction-based smoke tests and roll back temporary data.
 - For runtime behavior, prefer `vercel dev` smoke tests.
