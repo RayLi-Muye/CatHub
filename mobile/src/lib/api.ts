@@ -23,11 +23,10 @@ import type {
   MobileWeightCreatePayload,
   MobileWeightListPayload,
 } from "@cathub/shared";
-import { Platform } from "react-native";
 import { getAccessToken, setAccessToken } from "./token-store";
 
-const DEFAULT_API_BASE_URL =
-  Platform.OS === "web" ? "http://localhost:3000" : "http://localhost:3000";
+const DEFAULT_API_PORT = process.env.EXPO_PUBLIC_API_PORT?.trim() || "3000";
+const DEFAULT_API_BASE_URL = `http://localhost:${DEFAULT_API_PORT}`;
 
 const API_BASE_URL =
   process.env.EXPO_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ??

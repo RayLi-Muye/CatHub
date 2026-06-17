@@ -21,6 +21,20 @@ The lineage system now supports:
 
 ## Recent Changes
 
+### 2026-06-18 - Mobile Dev API Port Override
+
+- Added `EXPO_PUBLIC_API_PORT` support to the mobile API client's local fallback URL, while keeping `EXPO_PUBLIC_API_BASE_URL` as the full override.
+- Documented the port override in `mobile/.env.example` and `docs/CONTEXT.md`.
+- Added `pnpm mobile:dev-api:check` as a no-network guard for the local mobile API fallback contract.
+
+Validation:
+
+- `pnpm mobile:dev-api:check`
+- `pnpm --filter @cathub/mobile typecheck`
+- `pnpm lint`
+- `pnpm build`
+- `git diff --check`
+
 ### 2026-06-18 - Product Vision And Maintenance Authorization
 
 - Added `VISION.md` as the product/roadmap alignment anchor for future maintenance work.
