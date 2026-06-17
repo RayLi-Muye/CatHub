@@ -28,7 +28,8 @@ Screenshots, logs, or live proof:
 ## Owner decision needs
 
 - [ ] No owner decision needed beyond PR review.
-- [ ] Requires explicit owner approval before merge.
+- [ ] Routine maintenance standing authorization applies.
+- [ ] Requires explicit owner approval before non-routine merge.
 - [ ] Requires explicit owner approval before deploy/release.
 - [ ] Requires explicit owner approval before production data or credential use.
 

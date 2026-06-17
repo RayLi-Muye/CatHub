@@ -1,6 +1,6 @@
 # CatHub Context
 
-This file is the quick context package for humans and coding agents. For rules, read `AGENTS.md`. For detailed historical notes, read `docs/HISTORY.md`.
+This file is the quick context package for humans and coding agents. For high-level product direction, read `VISION.md`. For rules, read `AGENTS.md`. For detailed historical notes, read `docs/HISTORY.md`.
 
 ---
 
@@ -9,6 +9,8 @@ This file is the quick context package for humans and coding agents. For rules, 
 CatHub is an AI cat digital-twin platform. The MVP focuses on cat identity, health tracking, social timeline, breeder-oriented lineage tracking, and a native mobile companion.
 
 Current priority: build the mobile app foundation as a thin React Native client over explicit mobile APIs, while keeping the existing Next.js web app stable.
+
+The high-level product thesis, roadmap horizons, assumptions, and non-goals live in `VISION.md`. Future issues should align to one of those pillars or explain why the work is necessary maintenance, risk reduction, or developer-experience work.
 
 ---
 
@@ -273,6 +275,7 @@ For docs-only changes:
 - Identity code ownership does not transfer cat ownership.
 - Multiple lineage claims can exist over time; one confirmed canonical edge per sire/dam role is enforced, with disputed/revoked history retained.
 - UI display depth is user-controlled; logical graph validation must not depend on display depth.
+- Routine GitHub-native maintenance has standing authorization for issue, branch, commit, push, PR, CI-fix, and low-risk green PR merge work. Production deploys, formal releases, sensitive credential use, production/cloud resource operations, destructive git operations, and major user-visible direction changes still require separate explicit owner approval.
 - Next feature priority is QR code / scan entry on top of the existing external request flow.
 
 ---

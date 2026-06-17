@@ -21,6 +21,16 @@ The lineage system now supports:
 
 ## Recent Changes
 
+### 2026-06-18 - Product Vision And Maintenance Authorization
+
+- Added `VISION.md` as the product/roadmap alignment anchor for future maintenance work.
+- Linked the vision from `README.md` and `docs/CONTEXT.md`.
+- Updated `docs/GITHUB_WORKFLOW.md` to reflect routine maintenance standing authorization while preserving explicit approval gates for deploy, release, production, sensitive credential, destructive git, and major direction changes.
+
+Validation:
+
+- `git diff --check`
+
 ### 2026-05-02 - Mobile Cat Creation
 
 - Added `POST /api/mobile/cats` accepting JSON `{ name, breed?, sex?, birthdate?, description?, colorMarkings?, microchipId?, isNeutered?, isPublic? }`. Authenticated user becomes the owner. Slug is generated via the same `slugify` from `transliteration` as the web action; same-owner slug collisions get a timestamp suffix.
@@ -312,7 +322,9 @@ Recommended next feature slice:
 
 ## Useful Links
 
+- Product vision: `VISION.md`
 - Current context: `docs/CONTEXT.md`
 - Full history: `docs/HISTORY.md`
+- GitHub workflow: `docs/GITHUB_WORKFLOW.md`
 - Agent rules: `AGENTS.md`
 - Deployment notes: `ref/DEPLOYMENT.md`
