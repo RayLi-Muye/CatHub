@@ -232,6 +232,7 @@ pnpm mobile:ios:run
 pnpm mobile:android
 pnpm mobile:web
 pnpm mobile:dev-api:check
+pnpm mobile:mock-api:check
 pnpm shared:typecheck
 pnpm db:generate
 pnpm db:push
@@ -249,6 +250,8 @@ Notes:
 - `EXPO_PUBLIC_API_BASE_URL=http://<host>:<port>` remains the full URL override and takes precedence over `EXPO_PUBLIC_API_PORT`.
 - For a physical phone, set `EXPO_PUBLIC_API_BASE_URL=http://<computer-lan-ip>:3000` and run Next.js on a reachable host.
 - Mobile dev API fallback configuration can be checked with `pnpm mobile:dev-api:check`.
+- Set `EXPO_PUBLIC_MOBILE_API_MODE=mock` for local UI-only previews of the login/current-user/dashboard path without a running CatHub API or database. This first mock slice intentionally returns a clear unsupported error for cat detail, create/edit, timeline, health, weight, lineage, QR scan, and media upload paths.
+- Mobile mock API boundary coverage can be checked with `pnpm mobile:mock-api:check`.
 - iOS Simulator requires full Xcode, not only Command Line Tools. After installing Xcode, run `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer`, open Xcode once, install an iOS runtime in Xcode Settings > Platforms, then verify with `xcrun simctl list devices available`.
 
 ---
@@ -262,6 +265,7 @@ Before committing code changes:
 - Run `pnpm --filter @cathub/shared typecheck` when editing shared code.
 - Run `pnpm --filter @cathub/mobile typecheck` and `pnpm --filter @cathub/mobile exec expo install --check` when editing mobile code.
 - Run `pnpm mobile:dev-api:check` when editing mobile local API URL fallback behavior.
+- Run `pnpm mobile:mock-api:check` when editing the mobile mock/dev API adapter boundary.
 - For schema changes, run `pnpm db:generate`.
 - For DB behavior, use transaction-based smoke tests and roll back temporary data.
 - For runtime behavior, prefer `vercel dev` smoke tests.

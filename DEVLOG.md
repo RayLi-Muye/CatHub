@@ -21,6 +21,21 @@ The lineage system now supports:
 
 ## Recent Changes
 
+### 2026-06-18 - Mobile Mock API First Slice
+
+- Added explicit `EXPO_PUBLIC_MOBILE_API_MODE=mock` support for the mobile API client.
+- Mock mode now supports the login, register, current-user, and dashboard path with representative local data, while unsupported endpoints return a clear first-slice boundary error.
+- Documented the mock mode in `mobile/.env.example` and `docs/CONTEXT.md`, and added `pnpm mobile:mock-api:check` as a no-network guard.
+
+Validation:
+
+- `pnpm mobile:dev-api:check`
+- `pnpm mobile:mock-api:check`
+- `pnpm --filter @cathub/mobile typecheck`
+- `pnpm lint`
+- `pnpm build`
+- `git diff --check`
+
 ### 2026-06-18 - Mobile Dev API Port Override
 
 - Added `EXPO_PUBLIC_API_PORT` support to the mobile API client's local fallback URL, while keeping `EXPO_PUBLIC_API_BASE_URL` as the full override.
