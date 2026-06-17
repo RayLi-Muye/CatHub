@@ -1,0 +1,70 @@
+name: Maintenance task
+description: Plan a non-trivial CatHub maintenance or implementation task.
+title: "[Task]: "
+labels:
+  - maintenance
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Non-trivial CatHub work should start here, then move through topic branch, pull request, GitHub Actions, and review/merge decision. Do not include secrets, tokens, production data, private reviewer credentials, or raw personal data.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What problem are we solving, and why now?
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: Define in-scope and out-of-scope work.
+      placeholder: |
+        In scope:
+        - ...
+        Out of scope:
+        - ...
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: The PR must satisfy these before review/merge decision.
+      placeholder: |
+        - [ ] ...
+        - [ ] Tests or focused validation are recorded.
+        - [ ] Documentation impact is handled.
+    validations:
+      required: true
+  - type: textarea
+    id: tests
+    attributes:
+      label: Tests / validation
+      description: Which local commands, GitHub Actions, screenshots, or runtime smoke evidence should prove the change?
+      placeholder: |
+        - pnpm lint
+        - pnpm build
+        - pnpm mobile:release:check, if mobile release gates are affected
+    validations:
+      required: true
+  - type: textarea
+    id: docs
+    attributes:
+      label: Documentation impact
+      description: Which docs must be updated, or why are docs not affected?
+    validations:
+      required: true
+  - type: textarea
+    id: risk
+    attributes:
+      label: Risks and rollback
+      description: What could go wrong, and how should the change be reverted or mitigated?
+    validations:
+      required: true
+  - type: textarea
+    id: owner_decisions
+    attributes:
+      label: Owner decision needs
+      description: List any required owner approvals, especially for merge, release, deploy, production data, store settings, privacy/legal, or credentials.
