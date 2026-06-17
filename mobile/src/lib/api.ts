@@ -23,6 +23,7 @@ import type {
   MobileWeightCreatePayload,
   MobileWeightListPayload,
 } from "@cathub/shared";
+import { isMobileMockApiEnabled, mockMobileRequest } from "./mock-api";
 import { getAccessToken, setAccessToken } from "./token-store";
 
 const DEFAULT_API_PORT = process.env.EXPO_PUBLIC_API_PORT?.trim() || "3000";
@@ -59,6 +60,10 @@ async function request<T>(
   path: string,
   init: RequestInit = {}
 ): Promise<ApiResult<T>> {
+  if (isMobileMockApiEnabled()) {
+    return mockMobileRequest<T>(path, init, await getAccessToken());
+  }
+
   const headers = new Headers(init.headers);
   headers.set("Accept", "application/json");
 

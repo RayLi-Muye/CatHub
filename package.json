@@ -15,6 +15,7 @@
     "mobile:ios:run": "pnpm --filter @cathub/mobile ios:run",
     "mobile:web": "pnpm --filter @cathub/mobile web",
     "mobile:dev-api:check": "node scripts/mobile-dev-api-check.mjs",
+    "mobile:mock-api:check": "node scripts/mobile-mock-api-check.mjs",
     "shared:typecheck": "pnpm --filter @cathub/shared typecheck",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
