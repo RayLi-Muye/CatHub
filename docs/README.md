@@ -9,6 +9,8 @@ maintainers, reviewers, and coding agents. Use this page as the docs index; use
 - [`../README.md`](../README.md) - repository quick start.
 - [`../VISION.md`](../VISION.md) - product thesis, pillars, roadmap horizons,
   assumptions, and non-goals.
+- [`ARCHITECTURE.md`](ARCHITECTURE.md) - high-level system boundaries, runtime
+  surfaces, and known architecture risks.
 - [`CONTEXT.md`](CONTEXT.md) - current implemented behavior, routes, data model,
   commands, validation, and known risks.
 - [`DEVELOPMENT.md`](DEVELOPMENT.md) - local development and validation baseline.
@@ -16,6 +18,8 @@ maintainers, reviewers, and coding agents. Use this page as the docs index; use
   validation expectations, and owner approval boundaries.
 - [`GITHUB_WORKFLOW.md`](GITHUB_WORKFLOW.md) - issue, branch, PR, checks, and
   merge decision workflow.
+- [`adr/README.md`](adr/README.md) - architecture decision record index and
+  template.
 - [`HISTORY.md`](HISTORY.md) - longer historical implementation notes.
 
 ## Current Documentation Roles
@@ -23,9 +27,11 @@ maintainers, reviewers, and coding agents. Use this page as the docs index; use
 - Keep `README.md` short and oriented around first-run commands.
 - Keep `CONTRIBUTING.md` focused on how to contribute safely.
 - Keep `VISION.md` focused on product direction and roadmap alignment.
+- Keep `docs/ARCHITECTURE.md` focused on high-level system boundaries and risks.
 - Keep `docs/CONTEXT.md` focused on the current truth of the product and repo.
 - Keep `docs/DEVELOPMENT.md` focused on local setup, mock/dev API modes, and
   validation commands.
+- Keep ADRs focused on durable technical decisions, tradeoffs, and consequences.
 - Keep `DEVLOG.md` short and current; move old implementation detail to
   `docs/HISTORY.md`.
 
@@ -46,7 +52,6 @@ Do not invent these policy commitments in routine maintenance PRs.
 
 Useful next docs can be added through the GitHub-native issue and PR flow:
 
-- Architecture decision records for major backend/mobile/API boundaries.
 - Release and deployment runbooks after owner-controlled production choices are
   settled.
 - Mobile production readiness docs once EAS, store metadata, reviewer access,

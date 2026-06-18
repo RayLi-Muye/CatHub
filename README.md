@@ -7,6 +7,7 @@ social timeline sharing, lineage tracking, and a native mobile companion.
 
 - [Project vision](VISION.md)
 - [Documentation index](docs/README.md)
+- [Architecture overview](docs/ARCHITECTURE.md)
 - [Current context](docs/CONTEXT.md)
 - [Development guide](docs/DEVELOPMENT.md)
 - [GitHub workflow](docs/GITHUB_WORKFLOW.md)
@@ -89,8 +90,12 @@ database.
   alignment.
 - [docs/README.md](docs/README.md) - documentation index and owner-decision
   follow-up list.
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) - high-level system boundaries,
+  runtime surfaces, and architecture risks.
 - [docs/CONTEXT.md](docs/CONTEXT.md) - current product truth, routes, data
   model, local commands, validation, and known risks.
+- [docs/adr/README.md](docs/adr/README.md) - ADR index and decision record
+  template.
 - [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) - local development, mobile
   mock/dev API modes, validation, and schema notes.
 - [docs/GITHUB_WORKFLOW.md](docs/GITHUB_WORKFLOW.md) - issue, branch, PR,

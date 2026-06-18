@@ -1,6 +1,6 @@
 # CatHub Context
 
-This file is the quick context package for humans and coding agents. For high-level product direction, read `VISION.md`. For rules, read `AGENTS.md`. For local development details, read `docs/DEVELOPMENT.md`. For the documentation index, read `docs/README.md`. For detailed historical notes, read `docs/HISTORY.md`.
+This file is the quick context package for humans and coding agents. For high-level product direction, read `VISION.md`. For rules, read `AGENTS.md`. For architecture boundaries, read `docs/ARCHITECTURE.md`. For local development details, read `docs/DEVELOPMENT.md`. For the documentation index, read `docs/README.md`. For detailed historical notes, read `docs/HISTORY.md`.
 
 ---
 
@@ -211,6 +211,8 @@ Lineage-specific enums:
 - Shared package: `packages/shared/src/index.ts`
 - Workspace config: `pnpm-workspace.yaml`
 - Documentation index: `docs/README.md`
+- Architecture overview: `docs/ARCHITECTURE.md`
+- ADR index: `docs/adr/README.md`
 - Development guide: `docs/DEVELOPMENT.md`
 
 ---
