@@ -8,6 +8,7 @@ social timeline sharing, lineage tracking, and a native mobile companion.
 - [Project vision](VISION.md)
 - [Current context](docs/CONTEXT.md)
 - [GitHub workflow](docs/GITHUB_WORKFLOW.md)
+- [Contributing guide](CONTRIBUTING.md)
 
 ## Quick Start
 
@@ -90,6 +91,8 @@ database.
   check, merge, and owner authorization rules.
 - [DEVLOG.md](DEVLOG.md) - current status, recent changes, validation, and next
   step.
+- [CONTRIBUTING.md](CONTRIBUTING.md) - contribution flow, validation, docs
+  routing, and owner approval boundaries.
 - [docs/HISTORY.md](docs/HISTORY.md) - longer historical implementation notes.
 
 ## Maintenance Boundaries

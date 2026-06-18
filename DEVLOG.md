@@ -21,6 +21,16 @@ The lineage system now supports:
 
 ## Recent Changes
 
+### 2026-06-18 - Contributor Guide
+
+- Added `CONTRIBUTING.md` as the contributor-facing entry point for the GitHub-native maintenance flow.
+- Linked the guide from `README.md` and kept authoritative project rules in `AGENTS.md`, `docs/CONTEXT.md`, `VISION.md`, and `docs/GITHUB_WORKFLOW.md`.
+- Documented validation, documentation routing, mobile mock/dev API checks, and owner approval boundaries without making license, security policy, or code of conduct decisions.
+
+Validation:
+
+- `git diff --check`
+
 ### 2026-06-18 - README Quick Start
 
 - Expanded `README.md` from a minimal link list into a compact maintainer entry point.
