@@ -233,6 +233,7 @@ pnpm mobile:android
 pnpm mobile:web
 pnpm mobile:dev-api:check
 pnpm mobile:mock-api:check
+pnpm mobile:mock-preview:check
 pnpm shared:typecheck
 pnpm db:generate
 pnpm db:push
@@ -252,6 +253,7 @@ Notes:
 - Mobile dev API fallback configuration can be checked with `pnpm mobile:dev-api:check`.
 - Set `EXPO_PUBLIC_MOBILE_API_MODE=mock` for local UI-only previews of the login/current-user/dashboard path without a running CatHub API or database. This first mock slice intentionally returns a clear unsupported error for cat detail, create/edit, timeline, health, weight, lineage, QR scan, and media upload paths.
 - Mobile mock API boundary coverage can be checked with `pnpm mobile:mock-api:check`.
+- The first mock preview path can be smoke-tested without network services using `pnpm mobile:mock-preview:check`; it executes the mock adapter for login, current user, dashboard, signed-out guard, and unsupported endpoint behavior.
 - iOS Simulator requires full Xcode, not only Command Line Tools. After installing Xcode, run `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer`, open Xcode once, install an iOS runtime in Xcode Settings > Platforms, then verify with `xcrun simctl list devices available`.
 
 ---
@@ -266,6 +268,7 @@ Before committing code changes:
 - Run `pnpm --filter @cathub/mobile typecheck` and `pnpm --filter @cathub/mobile exec expo install --check` when editing mobile code.
 - Run `pnpm mobile:dev-api:check` when editing mobile local API URL fallback behavior.
 - Run `pnpm mobile:mock-api:check` when editing the mobile mock/dev API adapter boundary.
+- Run `pnpm mobile:mock-preview:check` when editing the first mock login/current-user/dashboard preview path.
 - For schema changes, run `pnpm db:generate`.
 - For DB behavior, use transaction-based smoke tests and roll back temporary data.
 - For runtime behavior, prefer `vercel dev` smoke tests.

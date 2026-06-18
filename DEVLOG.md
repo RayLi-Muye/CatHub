@@ -21,6 +21,21 @@ The lineage system now supports:
 
 ## Recent Changes
 
+### 2026-06-18 - Mobile Mock Preview Smoke
+
+- Added `pnpm mobile:mock-preview:check` to execute the mock API adapter without starting Expo, Next.js, a database, or network services.
+- The smoke now verifies mock mode detection, login token issuance, signed-out current-user rejection, signed-in current user, dashboard cat payload, and unsupported endpoint behavior for the first mock slice.
+- Documented the check in `mobile/.env.example` and `docs/CONTEXT.md`.
+
+Validation:
+
+- `pnpm mobile:mock-api:check`
+- `pnpm mobile:mock-preview:check`
+- `pnpm --filter @cathub/mobile typecheck`
+- `pnpm lint`
+- `pnpm build`
+- `git diff --check`
+
 ### 2026-06-18 - Mobile Mock API First Slice
 
 - Added explicit `EXPO_PUBLIC_MOBILE_API_MODE=mock` support for the mobile API client.
