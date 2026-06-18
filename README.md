@@ -6,7 +6,9 @@ social timeline sharing, lineage tracking, and a native mobile companion.
 ## Start Here
 
 - [Project vision](VISION.md)
+- [Documentation index](docs/README.md)
 - [Current context](docs/CONTEXT.md)
+- [Development guide](docs/DEVELOPMENT.md)
 - [GitHub workflow](docs/GITHUB_WORKFLOW.md)
 - [Contributing guide](CONTRIBUTING.md)
 
@@ -85,8 +87,12 @@ database.
 
 - [VISION.md](VISION.md) - product thesis, roadmap horizons, and maintenance
   alignment.
+- [docs/README.md](docs/README.md) - documentation index and owner-decision
+  follow-up list.
 - [docs/CONTEXT.md](docs/CONTEXT.md) - current product truth, routes, data
   model, local commands, validation, and known risks.
+- [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) - local development, mobile
+  mock/dev API modes, validation, and schema notes.
 - [docs/GITHUB_WORKFLOW.md](docs/GITHUB_WORKFLOW.md) - issue, branch, PR,
   check, merge, and owner authorization rules.
 - [DEVLOG.md](DEVLOG.md) - current status, recent changes, validation, and next

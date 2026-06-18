@@ -21,6 +21,16 @@ The lineage system now supports:
 
 ## Recent Changes
 
+### 2026-06-18 - Docs Index And Development Baseline
+
+- Added `docs/README.md` as the documentation index and owner-decision follow-up list.
+- Added `docs/DEVELOPMENT.md` for local setup, web/mobile development, mobile mock/dev API modes, validation, schema notes, documentation updates, and safety boundaries.
+- Linked the new docs from `README.md`, `CONTRIBUTING.md`, and `docs/CONTEXT.md` without drafting license, security, or code of conduct policy commitments.
+
+Validation:
+
+- `git diff --check`
+
 ### 2026-06-18 - Contributor Guide
 
 - Added `CONTRIBUTING.md` as the contributor-facing entry point for the GitHub-native maintenance flow.
