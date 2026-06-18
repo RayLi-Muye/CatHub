@@ -14,6 +14,7 @@ Before opening non-trivial work, read:
 - `VISION.md` for product pillars, roadmap horizons, and non-goals.
 - `docs/CONTEXT.md` for current routes, data model, local commands, validation,
   and known risks.
+- `docs/DEVELOPMENT.md` for the local development and validation baseline.
 - `docs/GITHUB_WORKFLOW.md` for issue, PR, checks, and owner authorization
   boundaries.
 
