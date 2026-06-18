@@ -21,6 +21,25 @@ The lineage system now supports:
 
 ## Recent Changes
 
+### 2026-06-19 - README And GitHub About Readability
+
+- Reworked `README.md` into a first-time visitor entry point with one-sentence
+  positioning, jump links, capability overview, target users, getting started,
+  local development, validation, docs/resources, roadmap/status, and
+  contribution/security boundaries.
+- Updated GitHub About metadata from an empty description and no topics to:
+  - Description: `AI cat digital-twin platform for cat identity, care records, social timeline, lineage, and mobile workflows.`
+  - Topics: `ai`, `cats`, `digital-twin`, `expo`, `lineage`, `nextjs`,
+    `pet-care`, `postgresql`, `react-native`, `typescript`
+- Kept policy commitments such as license, security reporting, and code of
+  conduct as explicit owner-decision follow-ups instead of drafting them here.
+
+Validation:
+
+- `git diff --check`
+- `pnpm lint`
+- `pnpm build`
+
 ### 2026-06-18 - Docs Index And Development Baseline
 
 - Added `docs/README.md` as the documentation index and owner-decision follow-up list.
