@@ -21,6 +21,16 @@ The lineage system now supports:
 
 ## Recent Changes
 
+### 2026-06-18 - Architecture And ADR Baseline
+
+- Added `docs/ARCHITECTURE.md` to summarize current `main` architecture boundaries across Next.js, Expo mobile, shared package, auth, data, storage, mobile API modes, validation, and known risks.
+- Added `docs/adr/README.md` as the architecture decision record index and template for future durable technical decisions.
+- Linked the architecture and ADR docs from `README.md`, `CONTRIBUTING.md`, `docs/README.md`, and `docs/CONTEXT.md`.
+
+Validation:
+
+- `git diff --check`
+
 ### 2026-06-18 - Docs Index And Development Baseline
 
 - Added `docs/README.md` as the documentation index and owner-decision follow-up list.

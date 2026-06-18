@@ -12,8 +12,10 @@ Before opening non-trivial work, read:
 - `AGENTS.md` for agent and development rules.
 - `README.md` for quick-start commands.
 - `VISION.md` for product pillars, roadmap horizons, and non-goals.
+- `docs/ARCHITECTURE.md` for high-level system boundaries.
 - `docs/CONTEXT.md` for current routes, data model, local commands, validation,
   and known risks.
+- `docs/adr/README.md` when a durable architecture decision needs a record.
 - `docs/DEVELOPMENT.md` for the local development and validation baseline.
 - `docs/GITHUB_WORKFLOW.md` for issue, PR, checks, and owner authorization
   boundaries.
