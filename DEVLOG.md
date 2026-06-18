@@ -21,6 +21,16 @@ The lineage system now supports:
 
 ## Recent Changes
 
+### 2026-06-18 - README Quick Start
+
+- Expanded `README.md` from a minimal link list into a compact maintainer entry point.
+- Added quick-start commands for install, local web, Expo mobile, mobile mock preview, real mobile API port override, validation, schema generation, and documentation map.
+- Kept detailed project truth in `docs/CONTEXT.md` and linked README back to the GitHub workflow authorization boundaries.
+
+Validation:
+
+- `git diff --check`
+
 ### 2026-06-18 - Mobile Mock Preview Smoke
 
 - Added `pnpm mobile:mock-preview:check` to execute the mock API adapter without starting Expo, Next.js, a database, or network services.
